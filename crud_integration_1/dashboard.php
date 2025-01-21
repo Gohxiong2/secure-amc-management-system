@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+
 // Regenerate session ID periodically (every 5 minutes)
 if (!isset($_SESSION['regenerated_time']) || time() - $_SESSION['regenerated_time'] > 300) {
     session_regenerate_id(true);
@@ -16,6 +17,14 @@ if (!isset($_SESSION['regenerated_time']) || time() - $_SESSION['regenerated_tim
 // Fetch user details
 $username = htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8');
 $role = $_SESSION['role'];
+
+
+// Redirect to 403.php if the role is not admin, faculty, or student
+$allowed_roles = ['admin', 'faculty', 'student'];
+if (!in_array($role, $allowed_roles)) {
+    header("Location: 403.php");
+    exit();
+}
 
 ?>
 
@@ -31,14 +40,10 @@ $role = $_SESSION['role'];
     <p>Your role: <strong><?php echo ucfirst($role); ?></strong></p>
 
     <div class="menu">
-        <?php if ($role === 'faculty'): ?>
-            <a href="manage_student_courses_faculty.php">Manage Student Courses</a>
-        <?php elseif ($role === 'admin'): ?>
-            <a href="manage_student_courses_admin.php">Manage Student Courses</a>
-        <?php endif; ?>
-
-        <a href="courses_menu.php">Manage Courses</a>
-        <a href="logout.php">Logout</a>
+    <a href="manage_student_courses.php">Manage Student Courses</a>
+    <a href="courses_menu.php">Manage Courses</a>
+    <a href="logout.php">Logout</a>
     </div>
+
 </body>
 </html>
