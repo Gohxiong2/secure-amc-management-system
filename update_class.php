@@ -22,8 +22,6 @@
         <form method="POST" action="">
             <label for="name">Class Name:</label>
             <input type="text" id="name" name="name" value="<?php echo $row['class_name']; ?>" required><br>
-            <label for="course_id">Course ID:</label>
-            <input type="text" id="course_id" name="course_id" value="<?php echo $row['course_id']; ?>" required><br>
             <label for="semester">Semester:</label>
             <input type="text" id="semester" name="semester" value="<?php echo $row['semester']; ?>" required><br>
             <label for="start_date">Start Date:</label>
@@ -36,19 +34,18 @@
 
                 <?php
                 } else {
-                    echo "<p>Course not found.</p>";
+                    echo "<p>Class not found.</p>";
                 }
             }
 
             if (isset($_POST['update'])) {
                 $id = $_POST['id'];
                 $name = $_POST['name'];
-                $course_id = $_POST['course_id'];
                 $semester = $_POST['semester'];
                 $start_date = $_POST['start_date'];
                 $end_date = $_POST['end_date'];
 
-                $sql = "UPDATE courses SET class_name='$name', course_id='$course_id', semester='$semester', start_date='$start_date', end_date='$end_date' WHERE class_id=$id";
+                $sql = "UPDATE classes SET class_name='$name', semester='$semester', start_date='$start_date', end_date='$end_date' WHERE class_id=$id";
 
                 if ($conn->query($sql) === TRUE) {
                     echo "<p>Class updated successfully!</p>";

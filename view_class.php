@@ -11,7 +11,6 @@
                 <tr>
                     <th>Class ID</th>
                     <th>Class Name</th>
-                    <th>Course ID</th>
                     <th>Semester</th>
                     <th>Start Date</th>
                     <th>End Date</th>
@@ -30,7 +29,6 @@
                             echo "<tr>
                                 <td>{$row['class_id']}</td>
                                 <td>{$row['class_name']}</td>
-                                <td>{$row['course_id']}</td>
                                 <td>{$row['semester']}</td>
                                 <td>{$row['start_date']}</td>
                                 <td>{$row['end_date']}</td>
@@ -41,7 +39,7 @@
                             </tr>";
                         }
                     } else {
-                        echo "<tr><td>No courses found.</td></tr>";
+                        echo "<tr><td>No classes found.</td></tr>";
                     }
                 ?>
             </tbody>
