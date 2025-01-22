@@ -40,7 +40,7 @@ if (!in_array($role, $allowed_roles)) {
     <p>Your role: <strong><?php echo ucfirst($role); ?></strong></p>
 
     <div class="menu">
-    <a href="manage_student_courses.php">Manage Student Courses</a>
+    <a href="read_student.php">View Student Courses</a>
     <a href="courses_menu.php">Manage Courses</a>
     <a href="logout.php">Logout</a>
     </div>
