@@ -2,7 +2,7 @@
 require_once 'db_connect.php';
 
 // Authorization check
-if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['admin', 'faculty'])) {
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'faculty'])) {
     header('Location: login.php');
     exit;
 }
@@ -10,10 +10,9 @@ if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['admin'
 $errors = [];
 $success = '';
 
-// Process form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // CSRF protection
-    if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         die('Invalid CSRF token');
     }
 
@@ -25,33 +24,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $class_id = (int)$_POST['class_id'];
     $password = $_POST['password'];
 
-    // Validate inputs
+    // Validation
     if (empty($name)) $errors[] = "Name is required";
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Invalid email format";
-    if (strlen($phone) < 8) $errors[] = "Invalid phone number";
     if (empty($index_number)) $errors[] = "Index number required";
     if (strlen($password) < 8) $errors[] = "Password must be at least 8 characters";
 
     if (empty($errors)) {
+        mysqli_begin_transaction($conn);
+        
         try {
-            $pdo->beginTransaction();
-            
             // Create user
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (username, hashed_password, role) VALUES (?, ?, 'student')");
-            $stmt->execute([$email, $hashed_password]);
-            $user_id = $pdo->lastInsertId();
+            $stmt = mysqli_prepare($conn, "INSERT INTO users (username, hashed_password, role) VALUES (?, ?, 'student')");
+            mysqli_stmt_bind_param($stmt, 'ss', $email, $hashed_password);
+            mysqli_stmt_execute($stmt);
+            $user_id = mysqli_insert_id($conn);
 
             // Create student
-            $stmt = $pdo->prepare("INSERT INTO students (user_id, name, email, phone, index_number, class_id) 
-                                 VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$user_id, $name, $email, $phone, $index_number, $class_id]);
+            $stmt = mysqli_prepare($conn, "INSERT INTO students (user_id, name, email, phone, index_number, class_id) VALUES (?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, 'issssi', $user_id, $name, $email, $phone, $index_number, $class_id);
+            mysqli_stmt_execute($stmt);
 
-            $pdo->commit();
+            mysqli_commit($conn);
             $success = "Student created successfully";
-        } catch (PDOException $e) {
-            $pdo->rollBack();
-            $errors[] = "Database error: " . $e->getMessage();
+        } catch (Exception $e) {
+            mysqli_rollback($conn);
+            $errors[] = "Database error: " . mysqli_error($conn);
         }
     }
 }

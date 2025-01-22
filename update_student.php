@@ -1,56 +1,47 @@
 <?php
 require_once 'db_connect.php';
 
-// Authorization check
-if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['admin', 'faculty'])) {
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'faculty'])) {
     header('Location: login.php');
     exit;
 }
 
-// Get student ID
 $student_id = $_GET['id'] ?? null;
 if (!$student_id) die("Invalid student ID");
 
 // Fetch student data
-$stmt = $pdo->prepare("SELECT * FROM students WHERE student_id = ?");
-$stmt->execute([$student_id]);
-$student = $stmt->fetch();
+$stmt = mysqli_prepare($conn, "SELECT * FROM students WHERE student_id = ?");
+mysqli_stmt_bind_param($stmt, 'i', $student_id);
+mysqli_stmt_execute($stmt);
+$student = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
 $errors = [];
 $success = '';
 
-// Process form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // CSRF protection
-    if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         die('Invalid CSRF token');
     }
 
-    // Validate inputs
     $name = htmlspecialchars(trim($_POST['name']));
     $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
     $phone = htmlspecialchars(trim($_POST['phone']));
     $index_number = htmlspecialchars(trim($_POST['index_number']));
     $class_id = (int)$_POST['class_id'];
 
-    // Update database
     try {
-        $pdo->beginTransaction();
+        $stmt = mysqli_prepare($conn, "UPDATE students SET 
+                    name = ?, email = ?, phone = ?, index_number = ?, class_id = ?
+                    WHERE student_id = ?");
+        mysqli_stmt_bind_param($stmt, 'ssssii', $name, $email, $phone, $index_number, $class_id, $student_id);
+        mysqli_stmt_execute($stmt);
         
-        $stmt = $pdo->prepare("UPDATE students SET 
-                            name = ?, email = ?, phone = ?, index_number = ?, class_id = ?
-                            WHERE student_id = ?");
-        $stmt->execute([$name, $email, $phone, $index_number, $class_id, $student_id]);
-
-        $pdo->commit();
         $success = "Student updated successfully";
-    } catch (PDOException $e) {
-        $pdo->rollBack();
-        $errors[] = "Update failed: " . $e->getMessage();
+    } catch (Exception $e) {
+        $errors[] = "Update failed: " . mysqli_error($conn);
     }
 }
 
-// Generate CSRF token
 $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 ?>
 
