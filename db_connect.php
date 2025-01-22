@@ -1,16 +1,14 @@
 <?php
-function db_connect() {
-    $servername = "localhost";
-    $username = "root"; // Replace with your DB username
-    $password = "";     // Replace with your DB password
-    $dbname = "amc_student_management_system";
+session_start();
+$host = 'localhost';
+$dbname = 'amc_student_management_system';
+$username = 'root';
+$password = '';
 
-    $conn = new mysqli($servername, $username, $password, $dbname);
-
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
-    }
-
-    return $conn;
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Database connection failed: " . $e->getMessage());
 }
 ?>
