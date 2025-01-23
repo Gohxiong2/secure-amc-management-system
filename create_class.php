@@ -33,15 +33,15 @@
             <button type='submit' name='create'></button>
         </form>
         <?php
-            require 'db-connect.php';
+            require 'db_connect.php';
             $conn = db_connect();
             if (isset($_POST['create'])) {
-                $name = $_POST['name'];
-                $semester = $_POST['semester'];
-                $start_date = $_POST['start_date'];
-                $end_date = $_POST['end_date'];
+                $name = mysqli_real_escape_string($conn, $_POST['name']);
+                $semester = mysqli_real_escape_string($conn, $_POST['semester']);
+                $start_date = mysqli_real_escape_string($conn, $_POST['start_date']);
+                $end_date = mysqli_real_escape_string($conn, $_POST['end_date']);
 
-                $sql = "INSERT INTO classes (class_name, semester, start_date, end_date) VALUES ('$name', '$course_id', '$semester', '$start_date', '$end_date')";
+                $sql = "INSERT INTO classes (class_name, semester, start_date, end_date) VALUES ('$name', '$semester', '$start_date', '$end_date')";
 
                 if ($conn->query($sql) === TRUE) {
                     echo "Class created successfully!";
