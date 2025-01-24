@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="bg-primary">
     <div class="container">
         <div class="row min-vh-100 align-items-center justify-content-center">
-            <div class="col-md-8 col-lg-6">
+            <div class="col-md-6 col-lg-5">
                 <div class="card registration-card">
                     <div class="card-body p-5">
                         <h2 class="text-center mb-4 text-primary">Create New Account</h2>
@@ -110,8 +110,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </select>
                             </div>
 
-                            <div class="d-grid mb-4">
-                                <button type="submit" class="btn btn-primary btn-lg rounded-pill py-3">
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary rounded-pill">
                                     Register Now
                                 </button>
                             </div>
