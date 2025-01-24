@@ -6,12 +6,29 @@ verifyAuthentication();
 
 // Check if admin to show all records
 $isAdmin = isAdmin();
-$student_id = $_SESSION['user_id']; // Assume user_id is stored in session
+$student_id = $_SESSION['user_id'];
 
 if ($isAdmin) {
-    $students = $conn->query("SELECT * FROM students");
+    // Get all students with their courses
+    $students = $conn->query("
+        SELECT students.*, 
+        GROUP_CONCAT(courses.course_name SEPARATOR ', ') AS enrolled_courses
+        FROM students
+        LEFT JOIN student_courses ON students.student_id = student_courses.student_id
+        LEFT JOIN courses ON student_courses.course_id = courses.course_id
+        GROUP BY students.student_id
+    ");
 } else {
-    $stmt = $conn->prepare("SELECT * FROM students WHERE user_id = ?");
+    // Get single student with courses
+    $stmt = $conn->prepare("
+        SELECT students.*, 
+        GROUP_CONCAT(courses.course_name SEPARATOR ', ') AS enrolled_courses
+        FROM students
+        LEFT JOIN student_courses ON students.student_id = student_courses.student_id
+        LEFT JOIN courses ON student_courses.course_id = courses.course_id
+        WHERE students.user_id = ?
+        GROUP BY students.student_id
+    ");
     $stmt->bind_param("i", $student_id);
     $stmt->execute();
     $students = $stmt->get_result();
@@ -32,16 +49,23 @@ $csrf_token = generateCsrfToken();
         .table { border-radius: 10px; overflow: hidden; }
         .table thead { background-color: #4da8da; color: white; }
         .badge { border-radius: 10px; }
+        .course-list { max-width: 300px; white-space: normal; }
+        .header-container { display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body class="bg-light">
     <div class="container">
         <div class="card p-4">
-            <div class="d-flex justify-content-between mb-4">
-                <h2 class="text-primary">Student Records</h2>
-                <?php if ($isAdmin): ?>
-                    <a href="create_student.php" class="btn btn-primary">Create New</a>
-                <?php endif; ?>
+            <div class="header-container mb-4">
+                <a href="dashboard.php" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+                <h2 class="text-primary m-0">Student Records</h2>
+                <div>
+                    <?php if ($isAdmin): ?>
+                        <a href="create_student.php" class="btn btn-primary">Create New</a>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <?php displayMessages(); ?>
@@ -55,6 +79,7 @@ $csrf_token = generateCsrfToken();
                             <th>Email</th>
                             <th>Phone</th>
                             <th>Department</th>
+                            <th>Enrolled Courses</th>
                             <?php if ($isAdmin): ?>
                                 <th>Actions</th>
                             <?php endif; ?>
@@ -71,6 +96,11 @@ $csrf_token = generateCsrfToken();
                                 <span class="badge bg-primary">
                                     <?= htmlspecialchars($student['department']) ?>
                                 </span>
+                            </td>
+                            <td class="course-list">
+                                <?= $student['enrolled_courses'] 
+                                    ? htmlspecialchars($student['enrolled_courses'])
+                                    : '<span class="text-muted">No courses assigned</span>' ?>
                             </td>
                             <?php if ($isAdmin): ?>
                             <td>
@@ -91,5 +121,8 @@ $csrf_token = generateCsrfToken();
             </div>
         </div>
     </div>
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </body>
 </html>

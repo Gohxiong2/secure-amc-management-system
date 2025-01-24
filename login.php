@@ -75,19 +75,58 @@ if (isset($_GET['error']) && $_GET['error'] === 'session_expired') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .login-card {
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .btn-custom {
+            background: #0d6efd;
+            color: white;
+            border-radius: 25px;
+            padding: 10px 30px;
+        }
+    </style>
 </head>
-<body>
-    <h1>Login</h1>
-    <form method="post" action="">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br><br>
+<body class="bg-primary">
+    <div class="container">
+        <div class="row min-vh-100 align-items-center justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card login-card">
+                    <div class="card-body p-5">
+                        <h2 class="text-center mb-4 text-primary">Login</h2>
+                        <?php if (!empty($message)): ?>
+                            <div class="alert alert-danger"><?php echo htmlspecialchars($message); ?></div>
+                        <?php endif; ?>
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br><br>
+                        <form method="post" action="">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control rounded-pill" id="username" name="username" required>
+                            </div>
 
-        <input type="submit" value="Login">
-    </form>
-    <p><?php echo htmlspecialchars($message); ?></p>
-    <p>Register new account? <a href="register.php">Register here</a>.</p>
+                            <div class="mb-4">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control rounded-pill" id="password" name="password" required>
+                            </div>
+
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary rounded-pill">Login</button>
+                            </div>
+
+                            <div class="text-center">
+                                <p class="text-muted">Don't have an account? 
+                                    <a href="register.php" class="text-primary text-decoration-none">Register here</a>
+                                </p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
