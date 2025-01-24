@@ -1,6 +1,7 @@
 <?php
 session_start();
 require 'db_connect.php';
+require 'csrf.php';
 
 // Ensure the user is logged in and has the correct role (admin or faculty)
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'faculty'])) {
@@ -104,6 +105,8 @@ try {
 
     // Handle form submission for updating the assignment
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        verify_csrf_token($_POST['csrf_token']); // Verify CSRF toke
+
         $new_course_id = $_POST['course_id'] ?? null;
         $new_status = $_POST['status'] ?? null;
 
@@ -173,6 +176,9 @@ try {
     <h1>Update Course Assignment</h1>
 
     <form method="post" action="">
+        <?php $csrf_token = generate_csrf_token(); ?> <!-- Generate CSRF Token and assign it to hidden from field -->
+        <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+
         <label for="student_name">Student:</label>
         <input type="text" id="student_name" value="<?php echo htmlspecialchars($student_name, ENT_QUOTES, 'UTF-8'); ?>" readonly style="background-color: #f0f0f0;"><br><br>
 
