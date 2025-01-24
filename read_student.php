@@ -55,12 +55,17 @@ $csrf_token = generateCsrfToken();
 </head>
 <body class="bg-light">
     <div class="container">
+        <!-- Centered Title -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-auto">
+                <h2 class="text-primary text-center display-7 fw-bold">Student Records</h2>
+            </div>
+        </div>
         <div class="card p-4">
             <div class="header-container mb-4">
                 <a href="dashboard.php" class="btn btn-outline-primary">
                     <i class="bi bi-arrow-left"></i> Back to Dashboard
                 </a>
-                <h2 class="text-primary m-0">Student Records</h2>
                 <div>
                     <?php if ($isAdmin): ?>
                         <a href="create_student.php" class="btn btn-primary">Create New</a>
