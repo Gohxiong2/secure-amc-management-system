@@ -1,12 +1,10 @@
 <?php
 include 'db_connect.php';
-require_once 'security.php'; // Assume security functions are here
+require_once 'security.php';
 
-// Verify admin access
 verifyAdminAccess();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // CSRF validation
     if (!validateCsrfToken($_POST['csrf_token'])) {
         die("Invalid CSRF token");
     }
@@ -22,9 +20,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Validation
     $errors = [];
+    if (empty($name)) $errors[] = "Name is required";
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Invalid email format";
-    if (!preg_match('/^\d{8}$/', $student_number)) $errors[] = "Student number must be 8 digits";
-    // Add more validations as needed
+    if (!preg_match('/^[0-9]{10,15}$/', $phone)) $errors[] = "Invalid phone format";
+    if (!preg_match('/^[A-Za-z0-9]{8}$/', $student_number)) $errors[] = "Student number must be 8 alphanumeric characters";
+    if (!in_array($department, ['Cybersecurity', 'AI'])) $errors[] = "Invalid department";
 
     if (empty($errors)) {
         try {
@@ -33,8 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 (user_id, name, email, phone, student_number, class_id, department) 
                 VALUES (?, ?, ?, ?, ?, ?, ?)");
             
-            // For demo, create a placeholder user_id (should implement proper user creation)
-            $placeholder_user_id = 1; 
+            // Temporary user_id until proper user management is implemented
+            $placeholder_user_id = 1;
             
             $stmt->bind_param("issssis", 
                 $placeholder_user_id,
@@ -55,6 +55,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         (student_id, course_id, status) VALUES (?, ?, 'start')");
                     
                     foreach ($courses as $course_id) {
+                        if (!is_numeric($course_id)) {
+                            throw new Exception("Invalid course ID");
+                        }
                         $courseStmt->bind_param("ii", $student_id, $course_id);
                         $courseStmt->execute();
                     }
@@ -66,14 +69,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } catch (Exception $e) {
             error_log("Database error: " . $e->getMessage());
-            $_SESSION['error'] = "Error creating student";
+            $_SESSION['error'] = "Error creating student: " . $e->getMessage();
         }
     } else {
         $_SESSION['errors'] = $errors;
     }
 }
 
-// Fetch classes and courses for dropdowns
+// Fetch dropdown data
 $classes = $conn->query("SELECT * FROM classes");
 $courses = $conn->query("SELECT * FROM courses");
 $csrf_token = generateCsrfToken();
@@ -122,7 +125,7 @@ $csrf_token = generateCsrfToken();
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Class</label>
-                        <select name="class_id" class="form-select" required>
+                        <select name="class_id" class="form-select">
                             <?php while($class = $classes->fetch_assoc()): ?>
                                 <option value="<?= $class['class_id'] ?>"><?= htmlspecialchars($class['class_name']) ?></option>
                             <?php endwhile; ?>
@@ -130,7 +133,7 @@ $csrf_token = generateCsrfToken();
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Department</label>
-                        <select name="department" class="form-select" required>
+                        <select name="department" class="form-select">
                             <option value="Cybersecurity">Cybersecurity</option>
                             <option value="AI">AI</option>
                         </select>
