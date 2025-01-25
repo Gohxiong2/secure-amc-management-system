@@ -33,8 +33,8 @@
             <button type='submit' name='create'></button>
         </form>
         <?php
-            require 'db-connect.php';
-            $conn = db_connect();
+            require_once 'db-connect.php';
+
             if (isset($_POST['create'])) {
                 $name = $_POST['name'];
                 $semester = $_POST['semester'];

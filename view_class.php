@@ -18,8 +18,7 @@
             </thead>   
             <tbody>
                 <?php
-                    require 'db-connect.php';
-                    $conn = db_connect();
+                    require_once 'db_connect.php';
 
                     $sql = "SELECT * FROM classes";
                     $result = $conn->query($sql);

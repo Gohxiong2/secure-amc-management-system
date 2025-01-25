@@ -1,5 +1,5 @@
 <?php
-include 'db_connect.php';
+require_once 'db_connect.php';
 require_once 'security.php';
 
 verifyAuthentication();
