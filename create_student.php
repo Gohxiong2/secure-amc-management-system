@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Insert student courses
                 if (!empty($courses)) {
                     $courseStmt = $conn->prepare("INSERT INTO student_courses 
-                        (student_id, course_id, status) VALUES (?, ?, 'start')");
+                        (student_id, course_id, status) VALUES (?, ?, '')");
                     
                     foreach ($courses as $course_id) {
                         if (!is_numeric($course_id)) {
