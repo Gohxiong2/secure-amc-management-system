@@ -70,12 +70,17 @@ try {
 </head>
 <body class="bg-light">
     <div class="container">
+        <!-- Centered Title -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-auto">
+                <h2 class="text-primary text-center display-7 fw-bold">Student Courses</h2>
+            </div>
+        </div>
         <div class="card p-4 mb-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <a href="dashboard.php" class="btn btn-outline-primary">
-                    Back to Dashboard
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
                 </a>
-                <h1 class="h3 text-primary mb-0">Course Assignments</h1>
                 <a href="assign_student_courses.php" class="btn btn-primary">
                     Assign Course
                 </a>
@@ -114,7 +119,7 @@ try {
                             <td class="text-center">
                                 <a href="update_student_courses.php?student_id=<?= $row['student_id'] ?>&course_id=<?= $row['course_id'] ?>" 
                                    class="btn btn-sm btn-outline-primary action-btn me-2">
-                                   Update
+                                   Manage
                                 </a>
                                 <form method="POST" action="delete_student_courses.php" class="d-inline">
                                     <input type="hidden" name="csrf_token" value="<?= generateCsrfToken() ?>">
@@ -143,5 +148,6 @@ try {
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </body>
 </html>

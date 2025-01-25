@@ -46,6 +46,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = sanitizeInput($_POST['status']);
 
     try {
+        // Check for existing assignment
+        $check_stmt = $conn->prepare("SELECT COUNT(*) as count FROM student_courses WHERE student_id = ? AND course_id = ?");
+        $check_stmt->bind_param('ii', $student_id, $course_id);
+        $check_stmt->execute();
+        $result = $check_stmt->get_result();
+        $row = $result->fetch_assoc();
+
+        if ($row['count'] > 0) {
+            // Duplicate assignment found
+            $_SESSION['error'] = "This course is already assigned to the selected student.";
+            header("Location: assign_student_courses.php");
+            exit();
+        }
+
+        // If no duplicate, proceed with insertion
         $stmt = $conn->prepare("INSERT INTO student_courses (student_id, course_id, status) VALUES (?, ?, ?)");
         $stmt->bind_param('iis', $student_id, $course_id, $status);
         
@@ -57,6 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } catch (Exception $e) {
         error_log("Assignment error: " . $e->getMessage());
         $_SESSION['error'] = "Error assigning course";
+        header("Location: assign_student_courses.php");
+        exit();
     }
 }
 
@@ -78,12 +95,17 @@ $csrf_token = generateCsrfToken();
 </head>
 <body class="bg-light">
     <div class="container">
+        <!-- Centered Title -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-auto">
+                <h2 class="text-primary text-center display-7 fw-bold">Assign Courses</h2>
+            </div>
+        </div>
         <div class="card p-4">
             <div class="header-container mb-4">
                 <a href="read_student_courses.php" class="btn btn-outline-primary">
                     <i class="bi bi-arrow-left"></i> Back to Student Courses
                 </a>
-                <h2 class="text-primary m-0">Assign Courses</h2>
             </div>
 
             <?php displayMessages(); ?>

@@ -51,3 +51,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Location: read_student.php");
     exit();
 }
+?>

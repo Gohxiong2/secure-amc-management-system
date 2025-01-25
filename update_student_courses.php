@@ -45,12 +45,7 @@ $enum_values = preg_replace("/^enum\('(.*)'\)$/", "$1", $enum_row['Type']);
 $valid_statuses = explode("','", $enum_values);
 
 // Check if the current status matches any of the valid statuses
-var_dump($current_status);
-var_dump($valid_statuses);
-
-if (in_array($current_status, $valid_statuses)) {
-    $_SESSION['error'] = "Course is unavailable due to its current status";
-}
+$has_active_courses = in_array($current_status, $valid_statuses);
 
 // Get available courses for reassignment (only if no active courses)
 $course_query = "SELECT c.course_id, c.course_name 
@@ -146,18 +141,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="bg-light">
     <div class="container">
+        <!-- Centered Title -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-auto">
+                <h2 class="text-primary text-center display-7 fw-bold">Update Course Assignment</h2>
+            </div>
+        </div>
         <div class="card p-4">
             <div class="header-container mb-4">
                 <a href="read_student_courses.php" class="btn btn-outline-primary">
                     <i class="bi bi-arrow-left"></i> Back
                 </a>
-                <h2 class="text-primary m-0">Update Course Assignment</h2>
             </div>
 
             <?php displayMessages(); ?>
 
-            <h4>Student: <?= htmlspecialchars($current_assignment['student_name']) ?></h4>
-            <h5>Current Course: <?= htmlspecialchars($current_assignment['course_name']) ?></h5>
+            <h5 class="text-primary display-7">Student: <?= htmlspecialchars($current_assignment['student_name']) ?></h5>
+            <h5 class="text-primary display-7">Current Course: <?= htmlspecialchars($current_assignment['course_name']) ?></h5>
 
             <!-- Tabs Navigation -->
             <ul class="nav nav-tabs" id="myTab" role="tablist">

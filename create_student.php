@@ -24,13 +24,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Invalid email format";
     if (!preg_match('/^[0-9]{10,15}$/', $phone)) $errors[] = "Invalid phone format";
     if (!preg_match('/^[A-Za-z0-9]{8}$/', $student_number)) $errors[] = "Student number must be 8 alphanumeric characters";
-    if (!in_array($department, ['Cybersecurity', 'AI'])) $errors[] = "Invalid department";
+
+    // Fetch department_id
+    $departmentStmt = $conn->prepare("SELECT department_id FROM department WHERE name = ?");
+    $departmentStmt->bind_param("s", $department);
+    $departmentStmt->execute();
+    $departmentResult = $departmentStmt->get_result();
+    
+    if ($departmentResult->num_rows === 0) {
+        $errors[] = "Invalid department";
+    } else {
+        $departmentRow = $departmentResult->fetch_assoc();
+        $department_id = $departmentRow['department_id'];
+    }
 
     if (empty($errors)) {
         try {
             // Insert student
             $stmt = $conn->prepare("INSERT INTO students 
-                (user_id, name, email, phone, student_number, class_id, department) 
+                (user_id, name, email, phone, student_number, class_id, department_id) 
                 VALUES (?, ?, ?, ?, ?, ?, ?)");
             
             // Temporary user_id until proper user management is implemented
@@ -43,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $phone,
                 $student_number,
                 $class_id,
-                $department
+                $department_id
             );
             
             if ($stmt->execute()) {
@@ -79,6 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Fetch dropdown data
 $classes = $conn->query("SELECT * FROM classes");
 $courses = $conn->query("SELECT * FROM courses");
+$departments = $conn->query("SELECT * FROM department");
 $csrf_token = generateCsrfToken();
 ?>
 
@@ -134,8 +147,11 @@ $csrf_token = generateCsrfToken();
                     <div class="col-md-6">
                         <label class="form-label">Department</label>
                         <select name="department" class="form-select">
-                            <option value="Cybersecurity">Cybersecurity</option>
-                            <option value="AI">AI</option>
+                            <?php while($dept = $departments->fetch_assoc()): ?>
+                                <option value="<?= htmlspecialchars($dept['name']) ?>">
+                                    <?= htmlspecialchars($dept['name']) ?>
+                                </option>
+                            <?php endwhile; ?>
                         </select>
                     </div>
                     <div class="col-12">

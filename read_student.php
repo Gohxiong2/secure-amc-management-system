@@ -9,11 +9,13 @@ $isAdmin = isAdmin();
 $student_id = $_SESSION['user_id'];
 
 if ($isAdmin) {
-    // Get all students with their courses
+    // Get all students with their departments and courses
     $students = $conn->query("
         SELECT students.*, 
+        department.name AS department_name,
         GROUP_CONCAT(courses.course_name SEPARATOR ', ') AS enrolled_courses
         FROM students
+        JOIN department ON students.department_id = department.department_id
         LEFT JOIN student_courses ON students.student_id = student_courses.student_id
         LEFT JOIN courses ON student_courses.course_id = courses.course_id
         GROUP BY students.student_id
@@ -22,8 +24,10 @@ if ($isAdmin) {
     // Get single student with courses
     $stmt = $conn->prepare("
         SELECT students.*, 
+        department.name AS department_name,
         GROUP_CONCAT(courses.course_name SEPARATOR ', ') AS enrolled_courses
         FROM students
+        JOIN department ON students.department_id = department.department_id
         LEFT JOIN student_courses ON students.student_id = student_courses.student_id
         LEFT JOIN courses ON student_courses.course_id = courses.course_id
         WHERE students.user_id = ?
@@ -99,7 +103,7 @@ $csrf_token = generateCsrfToken();
                             <td><?= htmlspecialchars($student['phone']) ?></td>
                             <td>
                                 <span class="badge bg-primary">
-                                    <?= htmlspecialchars($student['department']) ?>
+                                    <?= htmlspecialchars($student['department_name']) ?>
                                 </span>
                             </td>
                             <td class="course-list">
@@ -110,7 +114,7 @@ $csrf_token = generateCsrfToken();
                             <?php if ($isAdmin): ?>
                             <td>
                                 <a href="update_student.php?id=<?= $student['student_id'] ?>" 
-                                   class="btn btn-sm btn-outline-primary me-2">Edit</a>
+                                   class="btn btn-sm btn-outline-primary me-2">Manage</a>
                                 <form method="POST" action="delete_student.php" class="d-inline">
                                     <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
                                     <input type="hidden" name="student_id" value="<?= $student['student_id'] ?>">
