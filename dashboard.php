@@ -75,7 +75,7 @@ if (!in_array($role, $allowed_roles)) {
                 <div class="card dashboard-card shadow-sm">
                     <div class="card-body text-center">
                         <h5 class="card-title text-primary">Manage Courses</h5>
-                        <a href="courses_menu.php" class="btn btn-primary rounded-pill mt-3">Go to Panel</a>
+                        <a href="read_course.php" class="btn btn-primary rounded-pill mt-3">Go to Panel</a>
                     </div>
                 </div>
             </div>
