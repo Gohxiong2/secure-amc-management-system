@@ -74,13 +74,16 @@ if (!in_array($role, $allowed_roles)) {
             <div class="col-md-4">
                 <div class="card dashboard-card shadow-sm">
                     <div class="card-body text-center">
-<<<<<<< HEAD
                         <h5 class="card-title text-primary">Manage Student Courses</h5>
                         <a href="read_student_courses.php" class="btn btn-primary rounded-pill mt-3">Go to Panel</a>
-=======
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card dashboard-card shadow-sm">
+                    <div class="card-body text-center">
                         <h5 class="card-title text-primary">Manage Courses</h5>
                         <a href="read_course.php" class="btn btn-primary rounded-pill mt-3">Go to Panel</a>
->>>>>>> eeaf68215663538b8b70262861c4f78cd7e1e9cf
                     </div>
                 </div>
             </div>
