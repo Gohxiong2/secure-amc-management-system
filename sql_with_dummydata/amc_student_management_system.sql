@@ -43,8 +43,8 @@ CREATE TABLE IF NOT EXISTS `classes` (
 --
 
 INSERT INTO `classes` (`class_id`, `class_name`, `semesterorterm`, `start_date`, `end_date`) VALUES
-(1, 'CS101-A', 'Spring 2024', '2024-01-01', '2024-06-01'),
-(2, 'MATH101-A', 'Spring 2024', '2024-01-01', '2024-06-01');
+(1, 'CS101-A', 'SEMESTER', '2024-01-01', '2024-06-01'),
+(2, 'MATH101-A', 'SEMESTER', '2024-01-01', '2024-06-01');
 
 -- --------------------------------------------------------
 
