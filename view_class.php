@@ -11,7 +11,7 @@
                 <tr>
                     <th>Class ID</th>
                     <th>Class Name</th>
-                    <th>Semester</th>
+                    <th>Semester/Term</th>
                     <th>Start Date</th>
                     <th>End Date</th>
                 </tr> 
@@ -28,7 +28,7 @@
                             echo "<tr>
                                 <td>{$row['class_id']}</td>
                                 <td>{$row['class_name']}</td>
-                                <td>{$row['semester']}</td>
+                                <td>{$row['semesterorterm']}</td>
                                 <td>{$row['start_date']}</td>
                                 <td>{$row['end_date']}</td>
                                 <td>

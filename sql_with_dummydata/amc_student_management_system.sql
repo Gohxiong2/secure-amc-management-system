@@ -32,21 +32,19 @@ USE `amc_student_management_system`;
 CREATE TABLE IF NOT EXISTS `classes` (
   `class_id` int(11) NOT NULL AUTO_INCREMENT,
   `class_name` varchar(30) NOT NULL,
-  `course_id` int(11) NOT NULL,
-  `semester` varchar(15) DEFAULT NULL,
+  `semesterorterm` varchar(15) DEFAULT NULL,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
   PRIMARY KEY (`class_id`),
-  KEY `course_id` (`course_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `classes`
 --
 
-INSERT INTO `classes` (`class_id`, `class_name`, `course_id`, `semester`, `start_date`, `end_date`) VALUES
-(1, 'CS101-A', 1, 'Spring 2024', '2024-01-01', '2024-06-01'),
-(2, 'MATH101-A', 2, 'Spring 2024', '2024-01-01', '2024-06-01');
+INSERT INTO `classes` (`class_id`, `class_name`, `semesterorterm`, `start_date`, `end_date`) VALUES
+(1, 'CS101-A', 'Spring 2024', '2024-01-01', '2024-06-01'),
+(2, 'MATH101-A', 'Spring 2024', '2024-01-01', '2024-06-01');
 
 -- --------------------------------------------------------
 
@@ -229,12 +227,6 @@ INSERT INTO `users` (`user_id`, `username`, `hashed_password`, `role`) VALUES
 --
 -- Constraints for dumped tables
 --
-
---
--- Constraints for table `classes`
---
-ALTER TABLE `classes`
-  ADD CONSTRAINT `classes_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`);
 
 --
 -- Constraints for table `faculty`

@@ -13,10 +13,14 @@
                 <input type='text' name='name'>
             </div>
             <div>
-                <label for='semester'>
-                    Semester:
+                <label for='semesterorterm'>
+                    Semester/Term:
                 </label>
-                <input type='text' name='semester'>
+                <select type='text' name='semesterorterm'>
+                    <option></option>
+                    <option value='SEMESTER'>Semester</option>
+                    <option value='TERM'>Term</option>
+                </select>
             </div>
             <div>
                 <label for='start_date'>
@@ -37,7 +41,7 @@
 
             if (isset($_POST['create'])) {
                 $name = htmlspecialchars(trim($_POST['name']), ENT_QUOTES);
-                $semester = htmlspecialchars(trim($_POST['semester']), ENT_QUOTES);
+                $semesterorterm = htmlspecialchars(trim($_POST['semesterorterm']), ENT_QUOTES);
                 $start_date = trim($_POST['start_date']);
                 $end_date = trim($_POST['end_date']);
 
@@ -53,13 +57,13 @@
                         $errors++;
                     }
                 }
-                if (empty($semester)){
-                    echo "Semester required!<br>";
+                if (empty($semesterorterm)){
+                    echo "Semester/term required!<br>";
                     $errors++;
                 }
                 else{
-                    if ((!preg_match('/^[a-zA-Z0-9\s.]+$/', $semester))){
-                        echo "Semester should not have special characters!<br>";
+                    if ((!preg_match('/^[a-zA-Z0-9\s.]+$/', $semesterorterm))) {
+                        echo "Invalid semester/term!<br>";
                         $errors++;
                     }
                 }
@@ -80,7 +84,7 @@
                 if ($errors === 0){
                     $stmt = $conn->prepare("insert into classes(class_id, class_name, semester, start_date, end_date) values
                     (NULL,?,?,?,?)");
-                    $stmt->bind_param('ssss', $name, $semester, $start_date, $end_date );//bind the parameters
+                    $stmt->bind_param('ssss', $name, $semesterorterm, $start_date, $end_date );//bind the parameters
                     if ($stmt->execute()) {
                         echo "Class created successfully!";
                     } 
