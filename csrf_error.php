@@ -1,8 +1,6 @@
 <?php
 session_start();
-
-// Determine the previous page or fallback to a dashboard
-$previous_page = $_SERVER['HTTP_REFERER'];
+$previous_page = $_SERVER['HTTP_REFERER'] ?? 'dashboard.php'; // Fallback to 'dashboard.php' if HTTP_REFERER is not set.
 ?>
 
 <!DOCTYPE html>
@@ -10,12 +8,13 @@ $previous_page = $_SERVER['HTTP_REFERER'];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Access Denied</title>
+    <title>CSRF Error</title>
 </head>
 <body>
-    <h1>Access Denied</h1>
-    <p>You do not have permission to access this page.</p>
-
+    <h1>Request Denied</h1>
+    <p>Your request could not be processed due to a security issue.</p>
+    <p>This may have occurred because your session expired or the form was submitted incorrectly.</p>
+    
     <!-- Logout and redirect to login -->
     <p><a href="logout.php?redirect=login">Return to Login</a></p>
     

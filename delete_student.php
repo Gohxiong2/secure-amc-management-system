@@ -1,40 +1,54 @@
 <?php
 require_once 'db_connect.php';
+require_once 'security.php';
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header('Location: login.php');
-    exit;
-}
+verifyAdminAccess();
 
-$student_id = $_GET['id'] ?? null;
-if (!$student_id) die("Invalid student ID");
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!validateCsrfToken($_POST['csrf_token'])) {
+        die("Invalid CSRF token");
+    }
 
-try {
-    mysqli_begin_transaction($conn);
+    $student_id = $_POST['student_id'] ?? 0;
     
-    // Get user ID
-    $stmt = mysqli_prepare($conn, "SELECT user_id FROM students WHERE student_id = ?");
-    mysqli_stmt_bind_param($stmt, 'i', $student_id);
-    mysqli_stmt_execute($stmt);
-    $user_id = mysqli_fetch_column(mysqli_stmt_get_result($stmt));
+    try {
+        // Check for existing courses
+        $checkStmt = $conn->prepare("SELECT COUNT(*) FROM student_courses 
+            WHERE student_id = ? AND status IN ('start', 'in-progress')");
+        $checkStmt->bind_param("i", $student_id);
+        $checkStmt->execute();
+        $result = $checkStmt->get_result();
+        $hasActiveCourses = $result->fetch_row()[0] > 0;
 
-    // Delete student
-    $stmt = mysqli_prepare($conn, "DELETE FROM students WHERE student_id = ?");
-    mysqli_stmt_bind_param($stmt, 'i', $student_id);
-    mysqli_stmt_execute($stmt);
-
-    // Delete user
-    $stmt = mysqli_prepare($conn, "DELETE FROM users WHERE user_id = ?");
-    mysqli_stmt_bind_param($stmt, 'i', $user_id);
-    mysqli_stmt_execute($stmt);
-
-    mysqli_commit($conn);
-    $_SESSION['success'] = "Student deleted successfully";
-} catch (Exception $e) {
-    mysqli_rollback($conn);
-    $_SESSION['error'] = "Deletion failed: " . mysqli_error($conn);
+        if ($hasActiveCourses) {
+            $_SESSION['error'] = "Cannot delete student with active courses";
+        } else {
+            // Delete from student_courses first
+            $conn->begin_transaction();
+            
+            try {
+                $deleteCourses = $conn->prepare("DELETE FROM student_courses WHERE student_id = ?");
+                $deleteCourses->bind_param("i", $student_id);
+                $deleteCourses->execute();
+                
+                // Delete from students
+                $deleteStudent = $conn->prepare("DELETE FROM students WHERE student_id = ?");
+                $deleteStudent->bind_param("i", $student_id);
+                $deleteStudent->execute();
+                
+                $conn->commit();
+                $_SESSION['success'] = "Student deleted successfully";
+            } catch (Exception $e) {
+                $conn->rollback();
+                throw $e;
+            }
+        }
+    } catch (Exception $e) {
+        error_log("Delete error: " . $e->getMessage());
+        $_SESSION['error'] = "Error deleting student: " . $e->getMessage();
+    }
+    
+    header("Location: read_student.php");
+    exit();
 }
-
-header('Location: read_student.php');
-exit;
 ?>

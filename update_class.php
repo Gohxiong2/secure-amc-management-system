@@ -7,8 +7,7 @@
     <body>
         <h1>Update Class</h1>
         <?php
-        require 'db-connect.php';
-        $conn = db_connect();
+        require_once 'db-connect.php';
 
         if (isset($_GET['id'])) {
             $id = $_GET['id'];

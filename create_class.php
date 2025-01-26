@@ -33,7 +33,8 @@
             <button type='submit' name='create'>Create</button>
         </form>
         <?php
-            require 'db_connect.php';
+            require_once 'db-connect.php';
+
             if (isset($_POST['create'])) {
                 $name = htmlspecialchars(trim($_POST['name'], ENT_QUOTES));
                 $semester = htmlspecialchars(trim($_POST['semester'], ENT_QUOTES));

@@ -1,80 +1,137 @@
 <?php
 require_once 'db_connect.php';
+require_once 'security.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
-}
+verifyAuthentication();
 
-// Fetch records
-if ($_SESSION['role'] === 'student') {
-    $stmt = mysqli_prepare($conn, "SELECT * FROM students WHERE user_id = ?");
-    mysqli_stmt_bind_param($stmt, 'i', $_SESSION['user_id']);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
+// Check if admin to show all records
+$isAdmin = isAdmin();
+$student_id = $_SESSION['user_id'];
+
+if ($isAdmin) {
+    // Get all students with their departments and courses
+    $students = $conn->query("
+        SELECT students.*, 
+        department.name AS department_name,
+        GROUP_CONCAT(courses.course_name SEPARATOR ', ') AS enrolled_courses
+        FROM students
+        JOIN department ON students.department_id = department.department_id
+        LEFT JOIN student_courses ON students.student_id = student_courses.student_id
+        LEFT JOIN courses ON student_courses.course_id = courses.course_id
+        GROUP BY students.student_id
+    ");
 } else {
-    $query = "SELECT s.*, c.class_name 
-              FROM students s 
-              JOIN classes c ON s.class_id = c.class_id";
-    $result = mysqli_query($conn, $query);
+    // Get single student with courses
+    $stmt = $conn->prepare("
+        SELECT students.*, 
+        department.name AS department_name,
+        GROUP_CONCAT(courses.course_name SEPARATOR ', ') AS enrolled_courses
+        FROM students
+        JOIN department ON students.department_id = department.department_id
+        LEFT JOIN student_courses ON students.student_id = student_courses.student_id
+        LEFT JOIN courses ON student_courses.course_id = courses.course_id
+        WHERE students.user_id = ?
+        GROUP BY students.student_id
+    ");
+    $stmt->bind_param("i", $student_id);
+    $stmt->execute();
+    $students = $stmt->get_result();
 }
 
-$students = mysqli_fetch_all($result, MYSQLI_ASSOC);
+$csrf_token = generateCsrfToken();
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Student Records</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Students</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .create-btn {
-            display: inline-block;
-            padding: 8px 16px;
-            background-color: #4CAF50;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        .create-btn:hover {
-            background-color: #45a049;
-        }
+        .container { max-width: 1200px; margin-top: 30px; }
+        .table { border-radius: 10px; overflow: hidden; }
+        .table thead { background-color: #4da8da; color: white; }
+        .badge { border-radius: 10px; }
+        .course-list { max-width: 300px; white-space: normal; }
+        .header-container { display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
-<body>
-    <h1>Student Records</h1>
+<body class="bg-light">
+    <div class="container">
+        <!-- Centered Title -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-auto">
+                <h2 class="text-primary text-center display-7 fw-bold">Student Records</h2>
+            </div>
+        </div>
+        <div class="card p-4">
+            <div class="header-container mb-4">
+                <a href="dashboard.php" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+                <div>
+                    <?php if ($isAdmin): ?>
+                        <a href="create_student.php" class="btn btn-primary">Create New</a>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <?php displayMessages(); ?>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Student Number</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Department</th>
+                            <th>Enrolled Courses</th>
+                            <?php if ($isAdmin): ?>
+                                <th>Actions</th>
+                            <?php endif; ?>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php while($student = $students->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($student['student_number']) ?></td>
+                            <td><?= htmlspecialchars($student['name']) ?></td>
+                            <td><?= htmlspecialchars($student['email']) ?></td>
+                            <td><?= htmlspecialchars($student['phone']) ?></td>
+                            <td>
+                                <span class="badge bg-primary">
+                                    <?= htmlspecialchars($student['department_name']) ?>
+                                </span>
+                            </td>
+                            <td class="course-list">
+                                <?= $student['enrolled_courses'] 
+                                    ? htmlspecialchars($student['enrolled_courses'])
+                                    : '<span class="text-muted">No courses assigned</span>' ?>
+                            </td>
+                            <?php if ($isAdmin): ?>
+                            <td>
+                                <a href="update_student.php?id=<?= $student['student_id'] ?>" 
+                                   class="btn btn-sm btn-outline-primary me-2">Manage</a>
+                                <form method="POST" action="delete_student.php" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
+                                    <input type="hidden" name="student_id" value="<?= $student['student_id'] ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                        onclick="return confirm('Are you sure?')">Delete</button>
+                                </form>
+                            </td>
+                            <?php endif; ?>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
     
-    <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'faculty'): ?>
-        <a href="create_student.php" class="create-btn">Create New Student</a>
-    <?php endif; ?>
-    
-    <table border="1">
-        <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Index Number</th>
-            <th>Class</th>
-            <?php if ($_SESSION['role'] === 'admin'): ?>
-                <th>Actions</th>
-            <?php endif; ?>
-        </tr>
-        <?php foreach ($students as $student): ?>
-        <tr>
-            <td><?= htmlspecialchars($student['name']) ?></td>
-            <td><?= htmlspecialchars($student['email']) ?></td>
-            <td><?= htmlspecialchars($student['phone']) ?></td>
-            <td><?= htmlspecialchars($student['index_number']) ?></td>
-            <td><?= htmlspecialchars($student['class_name'] ?? 'N/A') ?></td>
-            <?php if ($_SESSION['role'] === 'admin'): ?>
-                <td>
-                    <a href="update_student.php?id=<?= $student['student_id'] ?>">Edit</a>
-                    <a href="delete_student.php?id=<?= $student['student_id'] ?>" 
-                       onclick="return confirm('Are you sure?')">Delete</a>
-                </td>
-            <?php endif; ?>
-        </tr>
-        <?php endforeach; ?>
-    </table>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </body>
 </html>

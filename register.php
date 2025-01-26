@@ -64,26 +64,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register User</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .registration-card {
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .form-control, .form-select {
+            border-radius: 25px !important;
+            padding: 12px 20px;
+        }
+    </style>
 </head>
-<body>
-    <h1>Register a New User</h1>
-    <form method="post" action="">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br><br>
+<body class="bg-primary">
+    <div class="container">
+        <div class="row min-vh-100 align-items-center justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card registration-card">
+                    <div class="card-body p-5">
+                        <h2 class="text-center mb-4 text-primary">Create New Account</h2>
+                        
+                        <?php if (!empty($message)): ?>
+                            <div class="alert alert-<?php echo strpos($message, 'success') !== false ? 'success' : 'danger'; ?> rounded-pill">
+                                <?php echo htmlspecialchars($message); ?>
+                            </div>
+                        <?php endif; ?>
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br><br>
+                        <form method="post" action="">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
 
-        <label for="role">Role:</label>
-        <select id="role" name="role" required>
-            <option value="admin">Admin</option>
-            <option value="faculty">Faculty</option>
-            <option value="student">Student</option>
-        </select><br><br>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
 
-        <input type="submit" value="Register">
-    </form>
-    <p><?php echo htmlspecialchars($message); ?></p>
-    <p>Already have an account? <a href="login.php">Login here</a>.</p>
+                            <div class="mb-4">
+                                <label for="role" class="form-label">Select Role</label>
+                                <select class="form-select" id="role" name="role" required>
+                                    <option value="admin">Admin</option>
+                                    <option value="faculty">Faculty</option>
+                                    <option value="student">Student</option>
+                                </select>
+                            </div>
+
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary rounded-pill">
+                                    Register Now
+                                </button>
+                            </div>
+
+                            <div class="text-center">
+                                <p class="text-muted mb-0">Already have an account?</p>
+                                <a href="login.php" class="text-primary text-decoration-none fw-bold">
+                                    Login here
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
