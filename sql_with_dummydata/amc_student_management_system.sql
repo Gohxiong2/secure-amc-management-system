@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `classes` (
   `semesterorterm` varchar(15) DEFAULT NULL,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
-  PRIMARY KEY (`class_id`),
+  PRIMARY KEY (`class_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
