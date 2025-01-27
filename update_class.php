@@ -22,8 +22,8 @@
             <label for="name">Class Name:</label>
             <input type="text" id="name" name="name" value="<?php echo $row['class_name']; ?>" required><br>
             
-            <label for="semesterorterm">Semester/Term:</label>
-            <select id="semesterorterm" name="semesterorterm" required>
+            <label for="duration">Semester/Term:</label>
+            <select id="duration" name="duration" required>
                 <option value="semester" <?php echo ($row['semester'] === 'semester') ? 'selected' : ''; ?>>Semester</option>
                 <option value="term" <?php echo ($row['semester'] === 'term') ? 'selected' : ''; ?>>Term</option>
             </select><br>
@@ -47,11 +47,11 @@
             if (isset($_POST['update'])) {
                 $id = $_POST['id'];
                 $name = htmlspecialchars(trim($_POST['name']), ENT_QUOTES);
-                $semesterorterm = $_POST['semesterorterm'];
+                $duration = $_POST['duration'];
                 $start_date = $_POST['start_date'];
                 $end_date = $_POST['end_date'];
 
-                $sql = "UPDATE classes SET class_name='$name', semesterorterm='$semesterorterm', start_date='$start_date', end_date='$end_date' WHERE class_id=$id";
+                $sql = "UPDATE classes SET class_name='$name', duration='$duration', start_date='$start_date', end_date='$end_date' WHERE class_id=$id";
 
                 if ($conn->query($sql) === TRUE) {
                     echo "<p>Class updated successfully!</p>";

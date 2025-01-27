@@ -32,7 +32,7 @@ USE `amc_student_management_system`;
 CREATE TABLE IF NOT EXISTS `classes` (
   `class_id` int(11) NOT NULL AUTO_INCREMENT,
   `class_name` varchar(30) NOT NULL,
-  `semesterorterm` varchar(15) DEFAULT NULL,
+  `duration` varchar(15) DEFAULT NULL,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
   PRIMARY KEY (`class_id`)
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `classes` (
 -- Dumping data for table `classes`
 --
 
-INSERT INTO `classes` (`class_id`, `class_name`, `semesterorterm`, `start_date`, `end_date`) VALUES
+INSERT INTO `classes` (`class_id`, `class_name`, `duration`, `start_date`, `end_date`) VALUES
 (1, 'CS101-A', 'SEMESTER', '2024-01-01', '2024-06-01'),
 (2, 'MATH101-A', 'SEMESTER', '2024-01-01', '2024-06-01');
 
