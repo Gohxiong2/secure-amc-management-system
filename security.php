@@ -1,4 +1,7 @@
 <?php
+
+// CSRF
+
 //function that generates csrf token
 function generateCsrfToken() {
     if (empty($_SESSION['csrf_token']) || empty($_SESSION['csrf_token_expiry']) || time() > $_SESSION['csrf_token_expiry']) {
@@ -17,9 +20,23 @@ function validateCsrfToken($token) {
     }
 }
 
+// Checks
+
+function isAdmin() {
+    return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+}
+
+function isFaculty() {
+    return isset($_SESSION['role']) && $_SESSION['role'] === 'faculty';
+}
+
+// Input
+
 function sanitizeInput($data) {
     return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
 }
+
+//Verifications
 
 function verifyAdminAccess() {
     if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
@@ -29,16 +46,13 @@ function verifyAdminAccess() {
 }
 
 function verifyAuthentication() {
-    if (session_status() === PHP_SESSION_NONE) session_start();
     if (!isset($_SESSION['user_id'])) {
         header("Location: login.php");
         exit();
     }
 }
 
-function isAdmin() {
-    return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
-}
+// Others
 
 function displayMessages() {
     if (isset($_SESSION['error'])) {
@@ -60,10 +74,6 @@ function verifyAdminOrFacultyAccess() {
         header("Location: 403.php");
         exit();
     }
-}
-
-function isFaculty() {
-    return isset($_SESSION['role']) && $_SESSION['role'] === 'faculty';
 }
 
 //Logout user after 5 minutes of inactivity.
