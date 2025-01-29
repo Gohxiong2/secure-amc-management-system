@@ -2,7 +2,7 @@
 session_start();
 
 // Determine the previous page or fallback to a dashboard
-$previous_page = $_SERVER['HTTP_REFERER'];
+$previous_page = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : null;
 ?>
 
 <!DOCTYPE html>
@@ -11,15 +11,51 @@ $previous_page = $_SERVER['HTTP_REFERER'];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Access Denied</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .access-denied-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 15px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .access-denied-title {
+            color: #dc3545; /* Bootstrap's danger color */
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .access-denied-text {
+            margin: 20px 0;
+            font-size: 1.2rem;
+        }
+        .btn-custom {
+            margin: 5px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Access Denied</h1>
-    <p>You do not have permission to access this page.</p>
+    <div class="container">
+        <div class="access-denied-container">
+            <h1 class="access-denied-title">Access Denied</h1>
+            <p class="access-denied-text">You do not have permission to access this page.</p>
 
-    <!-- Logout and redirect to login -->
-    <p><a href="logout.php?redirect=login">Return to Login</a></p>
-    
-    <!-- Go back to the previous page -->
-    <p><a href="<?php echo htmlspecialchars($previous_page, ENT_QUOTES, 'UTF-8'); ?>">Go Back</a></p>
+            <!-- Logout and redirect to login -->
+            <a href="logout.php?redirect=login" class="btn btn-danger btn-custom">Return to Login</a>
+            
+            <!-- Conditionally display the "Go Back" link if a previous page exists -->
+            <?php if ($previous_page): ?>
+                <a href="<?php echo htmlspecialchars($previous_page, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-secondary btn-custom">Go Back</a>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- Bootstrap JavaScript Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
