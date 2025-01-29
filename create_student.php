@@ -1,8 +1,14 @@
 <?php
 require_once 'db_connect.php';
 require_once 'security.php';
-
 verifyAdminAccess();
+
+// Initialize variables
+$errors = [];
+$classes = [];
+$courses = [];
+$departments_result = mysqli_query($conn, "SELECT * FROM department");
+$departments = mysqli_fetch_all($departments_result, MYSQLI_ASSOC);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validateCsrfToken($_POST['csrf_token'])) {
@@ -14,42 +20,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = sanitizeInput($_POST['email']);
     $phone = sanitizeInput($_POST['phone']);
     $student_number = sanitizeInput($_POST['student_number']);
-    $class_id = sanitizeInput($_POST['class_id']);
-    $department = sanitizeInput($_POST['department']);
+    $class_id = filter_input(INPUT_POST, 'class_id', FILTER_VALIDATE_INT);
+    $department_id = filter_input(INPUT_POST, 'department_id', FILTER_VALIDATE_INT);
     $courses = $_POST['courses'] ?? [];
+    $password = bin2hex(random_bytes(8)); // Generate random password
 
     // Validation
-    $errors = [];
     if (empty($name)) $errors[] = "Name is required";
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Invalid email format";
-    if (!preg_match('/^[0-9]{10,15}$/', $phone)) $errors[] = "Invalid phone format";
+    if (!preg_match('/^[0-9]{8,15}$/', $phone)) $errors[] = "Phone must be 8-15 digits";
     if (!preg_match('/^[A-Za-z0-9]{8}$/', $student_number)) $errors[] = "Student number must be 8 alphanumeric characters";
-
-    // Fetch department_id
-    $departmentStmt = $conn->prepare("SELECT department_id FROM department WHERE name = ?");
-    $departmentStmt->bind_param("s", $department);
-    $departmentStmt->execute();
-    $departmentResult = $departmentStmt->get_result();
-    
-    if ($departmentResult->num_rows === 0) {
-        $errors[] = "Invalid department";
-    } else {
-        $departmentRow = $departmentResult->fetch_assoc();
-        $department_id = $departmentRow['department_id'];
-    }
+    if ($department_id <= 0) $errors[] = "Invalid department";
 
     if (empty($errors)) {
+        mysqli_begin_transaction($conn);
+        
         try {
-            // Insert student
-            $stmt = $conn->prepare("INSERT INTO students 
+            // 1. Create user account
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = mysqli_prepare($conn, "INSERT INTO users 
+                (username, hashed_password, role) VALUES (?, ?, 'student')");
+            mysqli_stmt_bind_param($stmt, 'ss', $student_number, $hashed_password);
+            
+            if (!mysqli_stmt_execute($stmt)) {
+                throw new Exception("User creation failed: " . mysqli_error($conn));
+            }
+            $user_id = mysqli_insert_id($conn);
+
+            // 2. Create student record
+            $stmt = mysqli_prepare($conn, "INSERT INTO students 
                 (user_id, name, email, phone, student_number, class_id, department_id) 
                 VALUES (?, ?, ?, ?, ?, ?, ?)");
-            
-            // Temporary user_id until proper user management is implemented
-            $placeholder_user_id = 1;
-            
-            $stmt->bind_param("issssis", 
-                $placeholder_user_id,
+
+            mysqli_stmt_bind_param($stmt, 'issssii', 
+                $user_id,
                 $name,
                 $email,
                 $phone,
@@ -58,40 +62,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $department_id
             );
             
-            if ($stmt->execute()) {
-                $student_id = $stmt->insert_id;
+            if (!mysqli_stmt_execute($stmt)) {
+                throw new Exception("Student creation failed: " . mysqli_error($conn));
+            }
+            $student_id = mysqli_insert_id($conn);
+
+            // 3. Assign courses
+            if (!empty($courses)) {
+                $stmt = mysqli_prepare($conn, "INSERT INTO student_courses 
+                    (student_id, course_id, status) VALUES (?, ?, 'start')");
                 
-                // Insert student courses
-                if (!empty($courses)) {
-                    $courseStmt = $conn->prepare("INSERT INTO student_courses 
-                        (student_id, course_id, status) VALUES (?, ?, '')");
+                foreach ($courses as $course_id) {
+                    $course_id = filter_var($course_id, FILTER_VALIDATE_INT);
+                    if (!$course_id) continue;
                     
-                    foreach ($courses as $course_id) {
-                        if (!is_numeric($course_id)) {
-                            throw new Exception("Invalid course ID");
-                        }
-                        $courseStmt->bind_param("ii", $student_id, $course_id);
-                        $courseStmt->execute();
+                    mysqli_stmt_bind_param($stmt, 'ii', $student_id, $course_id);
+                    if (!mysqli_stmt_execute($stmt)) {
+                        throw new Exception("Course assignment failed: " . mysqli_error($conn));
                     }
                 }
-                
-                $_SESSION['success'] = "Student created successfully";
-                header("Location: read_student.php");
-                exit();
             }
+
+            mysqli_commit($conn);
+            $_SESSION['success'] = "Student created successfully! Temporary password: $password";
+            header("Location: read_student.php");
+            exit();
         } catch (Exception $e) {
-            error_log("Database error: " . $e->getMessage());
+            mysqli_rollback($conn);
+            error_log("Error: " . $e->getMessage());
             $_SESSION['error'] = "Error creating student: " . $e->getMessage();
         }
     } else {
-        $_SESSION['errors'] = $errors;
+        $_SESSION['error'] = implode($errors);
     }
 }
 
 // Fetch dropdown data
-$classes = $conn->query("SELECT * FROM classes");
-$courses = $conn->query("SELECT * FROM courses");
-$departments = $conn->query("SELECT * FROM department");
+$classes_result = mysqli_query($conn, "SELECT * FROM classes");
+$classes = mysqli_fetch_all($classes_result, MYSQLI_ASSOC);
+
+$courses_result = mysqli_query($conn, "SELECT * FROM courses");
+$courses = mysqli_fetch_all($courses_result, MYSQLI_ASSOC);
+
 $csrf_token = generateCsrfToken();
 ?>
 
@@ -138,26 +150,28 @@ $csrf_token = generateCsrfToken();
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Class</label>
-                        <select name="class_id" class="form-select">
-                            <?php while($class = $classes->fetch_assoc()): ?>
-                                <option value="<?= $class['class_id'] ?>"><?= htmlspecialchars($class['class_name']) ?></option>
-                            <?php endwhile; ?>
+                        <select name="class_id" class="form-select" required>
+                            <?php foreach ($classes as $class): ?>
+                                <option value="<?= $class['class_id'] ?>">
+                                    <?= htmlspecialchars($class['class_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Department</label>
-                        <select name="department" class="form-select">
-                            <?php while($dept = $departments->fetch_assoc()): ?>
-                                <option value="<?= htmlspecialchars($dept['name']) ?>">
-                                    <?= htmlspecialchars($dept['name']) ?>
-                                </option>
-                            <?php endwhile; ?>
+                        <select name="department_id" class="form-select" required>
+                                <?php foreach ($departments as $dept): ?>
+                                    <option value="<?= $dept['department_id'] ?>">
+                                        <?= htmlspecialchars($dept['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="col-12">
                         <label class="form-label">Courses</label>
                         <div class="row g-2">
-                            <?php while($course = $courses->fetch_assoc()): ?>
+                            <?php foreach ($courses as $course): ?>
                                 <div class="col-md-4">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" 
@@ -167,7 +181,7 @@ $csrf_token = generateCsrfToken();
                                         </label>
                                     </div>
                                 </div>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                     <div class="col-12 mt-4">

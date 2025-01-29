@@ -94,8 +94,8 @@ $csrf_token = generateCsrfToken();
         <div class="card p-4">
             <!-- Header -->
             <div class="header-container">
-                <a href="dashboard.php" class="btn btn-outline-primary">
-                    Back to Dashboard
+            <a href="dashboard.php" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
                 </a>
                 <div>
                     <?php if ($isAdmin || $isFaculty): ?>
@@ -163,5 +163,8 @@ $csrf_token = generateCsrfToken();
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+        <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </body>
 </html>

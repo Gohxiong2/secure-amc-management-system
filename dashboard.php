@@ -53,40 +53,59 @@ if (!in_array($role, $allowed_roles)) {
 
     <div class="container mt-5">
         <div class="row g-4">
-
+            <!-- Conditional Card 1: Show "Manage Student Record" for Admin/Faculty OR "View My Record" for Students -->
             <div class="col-md-4">
-                <div class="card dashboard-card shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-primary">Manage Student Record</h5>
-                        <a href="read_student.php" class="btn btn-primary rounded-pill mt-3">Go to Panel</a>
+                <?php if ($role === 'admin' || $role === 'faculty'): ?>
+                    <!-- Admin/Faculty Card -->
+                    <div class="card dashboard-card shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title text-primary">Manage Student Record</h5>
+                            <a href="read_student.php" class="btn btn-primary rounded-pill mt-3">Go to Panel</a>
+                        </div>
                     </div>
-                </div>
+                <?php else: ?>
+                    <!-- Student Card -->
+                    <div class="card dashboard-card shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title text-primary">View My Record</h5>
+                            <a href="read_student.php" class="btn btn-primary rounded-pill mt-3">View Profile</a>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
 
-            <div class="col-md-4">
-                <div class="card dashboard-card shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-primary">Manage Student Courses</h5>
-                        <a href="read_student_courses.php" class="btn btn-primary rounded-pill mt-3">Go to Panel</a>
+            <!-- Cards 2-4: Only visible to Admin/Faculty -->
+            <?php if ($role === 'admin' || $role === 'faculty'): ?>
+                <!-- Manage Student Courses -->
+                <div class="col-md-4">
+                    <div class="card dashboard-card shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title text-primary">Manage Student Courses</h5>
+                            <a href="read_student_courses.php" class="btn btn-primary rounded-pill mt-3">Go to Panel</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card dashboard-card shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-primary">Manage Classes</h5>
-                        <a href="read_class.php" class="btn btn-primary rounded-pill mt-3">Go to Panel</a>
+
+                <!-- Manage Classes -->
+                <div class="col-md-4">
+                    <div class="card dashboard-card shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title text-primary">Manage Classes</h5>
+                            <a href="read_class.php" class="btn btn-primary rounded-pill mt-3">Go to Panel</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card dashboard-card shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-primary">Manage Courses</h5>
-                        <a href="read_course.php" class="btn btn-primary rounded-pill mt-3">Go to Panel</a>
+
+                <!-- Manage Courses -->
+                <div class="col-md-4">
+                    <div class="card dashboard-card shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title text-primary">Manage Courses</h5>
+                            <a href="read_course.php" class="btn btn-primary rounded-pill mt-3">Go to Panel</a>
+                        </div>
                     </div>
                 </div>
-            </div>
+            <?php endif; ?>
         </div>
     </div>
 

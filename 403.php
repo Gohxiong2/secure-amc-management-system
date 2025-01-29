@@ -1,5 +1,4 @@
 <?php
-session_start();
 
 // Determine the previous page or fallback to a dashboard
 $previous_page = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : null;
@@ -46,12 +45,10 @@ $previous_page = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : nu
             <p class="access-denied-text">You do not have permission to access this page.</p>
 
             <!-- Logout and redirect to login -->
-            <a href="logout.php?redirect=login" class="btn btn-danger btn-custom">Return to Login</a>
+            <a href="logout.php" class="btn btn-danger btn-custom">Return to Login</a>
             
-            <!-- Conditionally display the "Go Back" link if a previous page exists -->
-            <?php if ($previous_page): ?>
-                <a href="<?php echo htmlspecialchars($previous_page, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-secondary btn-custom">Go Back</a>
-            <?php endif; ?>
+            <!-- Go to dashboard -->
+            <a href="dashboard.php" class="btn btn-primary btn-custom">Go To Dashboard</a>
         </div>
     </div>
 

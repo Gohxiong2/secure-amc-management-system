@@ -1,9 +1,13 @@
 <?php
 require 'db_connect.php';
+require 'security.php';
 
-function register_user($conn, $username, $password, $role) {
+verifyAdminAccess();
+
+function create_user($conn, $username, $password, $role) {
     // Validate role
-    if (!in_array($role, ['admin', 'faculty', 'student'])) {
+    // Admin account is created in the database, not on the website
+    if (!in_array($role, ['faculty', 'student'])) {
         return "Invalid role selected.";
     }
 
@@ -51,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $role = trim($_POST['role']);
 
     if (!empty($username) && !empty($password) && !empty($role)) {
-        $message = register_user($conn, $username, $password, $role);
+        $message = create_user($conn, $username, $password, $role);
     } else {
         $message = "Please fill in all fields.";
     }
@@ -63,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register User</title>
+    <title>Create User</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .registration-card {
@@ -104,7 +108,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="mb-4">
                                 <label for="role" class="form-label">Select Role</label>
                                 <select class="form-select" id="role" name="role" required>
-                                    <option value="admin">Admin</option>
                                     <option value="faculty">Faculty</option>
                                     <option value="student">Student</option>
                                 </select>
@@ -112,16 +115,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <div class="d-grid mb-3">
                                 <button type="submit" class="btn btn-primary rounded-pill">
-                                    Register Now
+                                    Create Now
                                 </button>
                             </div>
 
-                            <div class="text-center">
-                                <p class="text-muted mb-0">Already have an account?</p>
-                                <a href="login.php" class="text-primary text-decoration-none fw-bold">
-                                    Login here
-                                </a>
-                            </div>
                         </form>
                     </div>
                 </div>

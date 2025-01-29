@@ -116,9 +116,7 @@ if (isset($_GET['error']) && $_GET['error'] === 'session_expired') {
                             </div>
 
                             <div class="text-center">
-                                <p class="text-muted">Don't have an account? 
-                                    <a href="register.php" class="text-primary text-decoration-none">Register here</a>
-                                </p>
+                            <a href="" class="text-primary text-decoration-none">Forgot password?</a>
                             </div>
                         </form>
                     </div>
