@@ -1,14 +1,15 @@
 <?php
-include 'db_connect.php';
+require_once 'db_connect.php';
 require_once 'security.php';
 
+//Security & Authentication Checks
 verifyAuthentication();
+enforceSessionTimeout(300);
 
-// Verify admin or faculty access
-if (!in_array($_SESSION['role'], ['admin', 'faculty'])) {
-    header("Location: 403.php");
-    exit();
-}
+//Database Connection Checks
+validateDatabaseConnection($conn);
+
+verifyAdminOrFacultyAccess();
 
 try {
     // Base query for fetching student course assignments
