@@ -1,16 +1,14 @@
 <?php
-require_once 'db_connect.php';
+include 'db_connect.php';
 require_once 'security.php';
 
-//Security & Authentication Checks
 verifyAuthentication();
-enforceSessionTimeout(300);
 
-//Database Connection Checks
-validateDatabaseConnection($conn);
-
-// Verify user role (admin and faculty only)
-verifyAdminOrFacultyAccess();
+// Verify faculty/admin access
+if (!in_array($_SESSION['role'], ['faculty', 'admin'])) {
+    header("Location: login.php");
+    exit();
+}
 
 $student_id = $_GET['student_id'] ?? null;
 $course_id = $_GET['course_id'] ?? null;

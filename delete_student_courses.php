@@ -1,13 +1,13 @@
 <?php
-include 'db_connect.php';
+require_once 'db_connect.php';
 require_once 'security.php';
 
+//Database Connection Checks
 verifyAuthentication();
+validateDatabaseConnection($conn);
 
-if (!in_array($_SESSION['role'], ['admin', 'faculty'])) {
-    header("Location: 403.php");
-    exit();
-}
+// Verify user role (admin and faculty only)
+verifyAdminOrFacultyAccess();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validateCsrfToken($_POST['csrf_token'])) {
