@@ -133,7 +133,7 @@ $csrf_token = generateCsrfToken();
                                     <td><?= date('d M Y', strtotime($course['start_date'])) ?></td>
                                     <td>
                                         <span class="badge status-badge 
-                                            <?= !$course['end_date'] ? 'bg-primary' : (strtotime($course['end_date']) > time() ? 'bg-warning text-dark' : 'bg-secondary') ?>">
+                                            <?= !$course['end_date'] ? 'bg-primary' : (strtotime($course['end_date']) > time() ? 'bg-warning text-dark' : 'bg-primary') ?>">
                                             <?= !$course['end_date'] ? 'Ongoing' : (strtotime($course['end_date']) > time() ? 'Ongoing (Ends ' . date('d M Y', strtotime($course['end_date'])) . ')' : date('d M Y', strtotime($course['end_date']))) ?>
                                         </span>
                                     </td>

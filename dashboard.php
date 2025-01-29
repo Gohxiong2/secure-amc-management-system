@@ -45,7 +45,7 @@ if (!in_array($role, $allowed_roles)) {
         <div class="container">
             <a class="navbar-brand" href="#">Dashboard</a>
             <div class="d-flex align-items-center">
-                <span class="text-white me-3">Welcome, <?php echo $username; ?>!</span>
+                <span class="text-white me-3">Welcome, <?php echo $username; ?>! <span class="text-primary badge bg-light rounded-pill fs-7"><?php echo ucfirst($role); ?></span></span>
                 <a href="logout.php" class="btn btn-outline-light">Logout</a>
             </div>
         </div>
@@ -53,15 +53,7 @@ if (!in_array($role, $allowed_roles)) {
 
     <div class="container mt-5">
         <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card dashboard-card shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-primary">Your Role</h5>
-                        <span class="badge bg-primary rounded-pill fs-6"><?php echo ucfirst($role); ?></span>
-                    </div>
-                </div>
-            </div>
-            
+
             <div class="col-md-4">
                 <div class="card dashboard-card shadow-sm">
                     <div class="card-body text-center">
@@ -76,6 +68,14 @@ if (!in_array($role, $allowed_roles)) {
                     <div class="card-body text-center">
                         <h5 class="card-title text-primary">Manage Student Courses</h5>
                         <a href="read_student_courses.php" class="btn btn-primary rounded-pill mt-3">Go to Panel</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card dashboard-card shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-primary">Manage Classes</h5>
+                        <a href="read_class.php" class="btn btn-primary rounded-pill mt-3">Go to Panel</a>
                     </div>
                 </div>
             </div>
