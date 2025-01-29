@@ -1,7 +1,7 @@
 <?php
 require_once 'db_connect.php';
 require_once 'security.php';
-verifyAdminAccess();
+verifyAdminOrFacultyAccess();
 
 // Initialize variables
 $errors = [];

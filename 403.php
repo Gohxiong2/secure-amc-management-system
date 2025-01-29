@@ -1,9 +1,3 @@
-<?php
-
-// Determine the previous page or fallback to a dashboard
-$previous_page = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : null;
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
