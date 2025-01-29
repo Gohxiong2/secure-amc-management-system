@@ -1,18 +1,17 @@
 <?php
-require_once 'db_connect.php';
+include 'db_connect.php';
 require_once 'security.php';
 
-//Database Connection Checks
 verifyAuthentication();
-validateDatabaseConnection($conn);
 
-// Verify user role (admin and faculty only)
-verifyAdminOrFacultyAccess();
-enforceSessionTimeout(300);
+// Verify faculty/admin access
+if (!in_array($_SESSION['role'], ['faculty', 'admin'])) {
+    header("Location: login.php");
+    exit();
+}
 
-// Initialize variables for messages
-$error_message = "";
-$success_message = "";
+$message = '';
+$message_type = '';
 
 try {
     // Fetch students
