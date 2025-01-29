@@ -6,15 +6,14 @@ verifyAuthentication();
 verifyAdminOrFacultyAccess();
 enforceSessionTimeout();
 
-$query = "SELECT c.*, co.course_name, co.course_code 
+// Updated query to remove course_id since it's not in the schema
+$query = "SELECT c.* 
           FROM classes c 
-          JOIN courses co ON c.course_id = co.course_id 
           ORDER BY c.start_date DESC";
 $result = mysqli_query($conn, $query);
 
 $csrf_token = generateCsrfToken();
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,15 +45,12 @@ $csrf_token = generateCsrfToken();
                     <a href="create_class.php" class="btn btn-primary">Create New Class</a>
                 <?php endif; ?>
             </div>
-
             <?php displayMessages(); ?>
-
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead>
                         <tr>
                             <th>Class Name</th>
-                            <th>Course</th>
                             <th>Semester</th>
                             <th>Start Date</th>
                             <th>End Date</th>
@@ -65,12 +61,7 @@ $csrf_token = generateCsrfToken();
                         <?php while ($row = mysqli_fetch_assoc($result)): ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($row['class_name']); ?></td>
-                                <td>
-                                    <span class="badge bg-primary">
-                                        <?php echo htmlspecialchars($row['course_name'] . ' (' . $row['course_code'] . ')'); ?>
-                                    </span>
-                                </td>
-                                <td><?php echo htmlspecialchars($row['semester']); ?></td>
+                                <td><?php echo htmlspecialchars($row['duration']); ?></td>
                                 <td><?php echo htmlspecialchars($row['start_date']); ?></td>
                                 <td><?php echo htmlspecialchars($row['end_date']); ?></td>
                                 <td>
