@@ -112,8 +112,7 @@ CREATE TABLE IF NOT EXISTS `faculty` (
 --
 
 INSERT INTO `faculty` (`faculty_id`, `user_id`, `course_id`, `class_id`) VALUES
-(1, 2, 1, 1),
-(2, 2, 2, 2);
+(1, 2, 1, 1);
 
 -- --------------------------------------------------------
 
