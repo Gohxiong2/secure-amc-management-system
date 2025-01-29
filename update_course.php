@@ -1,74 +1,20 @@
 <?php
-session_start();
-require 'db_connect.php';
-require 'csrf.php';
+require_once 'db_connect.php';
+require_once 'security.php';
 
+//Security & Authentication Checks
+verifyAuthentication();
+enforceSessionTimeout(300);
 
-function enforce_session_timeout($timeout = 300) {
+//Database Connection Checks
+validateDatabaseConnection($conn);
 
-    if (isset($_SESSION['last_activity'])) {
-        $elapsed_time = time() - $_SESSION['last_activity']; 
-        if ($elapsed_time > $timeout) {
-            session_unset();
-            session_destroy();
-            header("Location: login.php?error=session_expired");
-            exit();
-        }
-    }
+// Verify user role (admin and faculty only)
+verifyAdminOrFacultyAccess();
 
-    $_SESSION['last_activity'] = time();
-}
-
-
-if (!isset($conn) || $conn === null) {
-    $error_message = "Database connection error. Please try again later.";
-    $conn = null; 
-}
-
-
-
-function check_login() {
-    if (!isset($_SESSION['user_id'])) {
-        session_regenerate_id(true);
-        header("Location: login.php");
-        exit();
-    }
-}
-
-
-function check_role_access($allowed_roles) {
-    if (!in_array($_SESSION['role'], $allowed_roles)) {
-        $_SESSION['error_message'] = "You do not have permission to access this page.";
-        header("Location: 403.php");
-        exit(); 
-    }
-}
-
-
-check_login(); // 
-enforce_session_timeout(); 
-check_role_access(['admin', 'faculty']); 
-
-
-function check_permission($conn, $user_id, $role, $course_id) {
-    if ($role === 'admin') {
-        return true;
-    }
-
-    if ($role === 'faculty') {
-        $query = "SELECT 1 FROM faculty WHERE user_id = ? AND course_id = ?";
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param('ii', $user_id, $course_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        return $result->num_rows > 0;
-    }
-
-    return false;
-}
-
-
-function fetch_course_details($conn, $course_id) {
+// Fetches the details of the course specified by the course_id.
+// Returns an associative array of course details or null if the course is not found.
+function fetchCourseDetails($conn, $course_id) {
     try {
         $query = "SELECT course_id, course_name, course_code, start_date, end_date FROM courses WHERE course_id = ?";
         $stmt = $conn->prepare($query);
@@ -78,26 +24,36 @@ function fetch_course_details($conn, $course_id) {
         return $result->fetch_assoc();
     } catch (Exception $e) {
         error_log("Error fetching course details: " . $e->getMessage());
-        return null; 
+        return null; // Return null on error
     }
 }
 
 
-if ($conn === null) {
-    $error_message = $error_message ?? "Database connection error. Please try again later.";
-} elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
-
+// Handle GET requests to fetch course details
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (isset($_GET['course_id'])) {
         $course_id = (int)$_GET['course_id']; // Sanitize input
 
-        $course = fetch_course_details($conn, $course_id);
+        // Fetch course details
+        $course = fetchCourseDetails($conn, $course_id);
         if (!$course) {
             die("Sorry, the requested course could not be found.");
         }
 
-        // Check if the user has permission to edit this course
-        if (!check_permission($conn, $_SESSION['user_id'], $_SESSION['role'], $course_id)) {
-            die("You do not have the necessary permissions to edit this course.");
+        // Check update permissions
+        if (!isAdmin()) {
+            // Ensure faculty can only update their own courses
+            $faculty_check_query = "SELECT 1 FROM faculty WHERE user_id = ? AND course_id = ?";
+            $faculty_check_stmt = $conn->prepare($faculty_check_query);
+            $faculty_check_stmt->bind_param('ii', $_SESSION['user_id'], $course_id);
+            $faculty_check_stmt->execute();
+            $faculty_check_result = $faculty_check_stmt->get_result();
+
+            if ($faculty_check_result->num_rows === 0) {
+                $_SESSION['error_message'] = "You do not have permission to update this course.";
+                header("Location: read_course.php");
+                exit();
+            }
         }
 
         // Store course details in session
@@ -105,29 +61,38 @@ if ($conn === null) {
         header("Location: update_course.php");
         exit();
     } elseif (isset($_SESSION['selected_course'])) {
+        // Retrieve course from session if already selected
         $course = $_SESSION['selected_course'];
     } else {
         die("No course is currently selected for editing.");
     }
-} 
-if ($conn === null) {
-    $error_message = $error_message ?? "Database connection error. Please try again later.";
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf_token($_POST['csrf_token']); // Verify CSRF token
-    
+}
+
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Validate CSRF token
+    if (!validateCsrfToken($_POST['csrf_token'])) {
+        die("Invalid CSRF token.");
+    }
+
+    // Retrieve course details from session
     if (!isset($_SESSION['selected_course'])) {
         die("Unable to find course details in session. Please try again.");
     }
 
-    $course = $_SESSION['selected_course'];
-    $course_id = $course['course_id'];
+    $course_id = $_SESSION['selected_course']['course_id'];
 
-    // Sanitize and validate user inputs
-    $course_name = htmlspecialchars(trim($_POST['course_name']), ENT_QUOTES, 'UTF-8');
-    $course_code = htmlspecialchars(trim($_POST['course_code']), ENT_QUOTES, 'UTF-8');
+    // Sanitize inputs
+    $course_name = sanitizeInput($_POST['course_name']);
+    $course_code = sanitizeInput($_POST['course_code']);
     $start_date = $_POST['start_date'];
     $end_date = !empty($_POST['end_date']) ? $_POST['end_date'] : null;
+    $current_date = date('Y-m-d'); // Current date
+    $six_months_later = (new DateTime($current_date))->modify('+6 months')->format('Y-m-d'); // Six months after today
+    $min_start_date = '2015-01-01'; // Minimum start date
+    $max_end_date = '2035-12-31'; // Maximum end date
 
+    // Validate inputs and display the first error encountered
     if (empty($course_name)) {
         $error_message = "Please enter a course name.";
     } elseif (!preg_match('/^[a-zA-Z0-9&\-_ ]+$/', $course_name)) {
@@ -140,16 +105,22 @@ if ($conn === null) {
         $error_message = "The course code can only include letters, numbers, and the symbols (-, _).";
     } elseif (strlen($course_code) > 10) {
         $error_message = "The course code must not exceed 10 characters.";
-    } elseif (!preg_match('/\d/', $course_code)) {
-    $error_message = "The course code must include at least one digit.";
+    } elseif (!preg_match('/[a-zA-Z]/', $course_code) || !preg_match('/\d/', $course_code)) {
+        $error_message = "The course code must include at least one letter and one digit.";
     } elseif (empty($start_date)) {
         $error_message = "Start date is required.";
-    } elseif (!is_null($end_date) && strtotime($start_date) > strtotime($end_date)) {
-        $error_message = "The start date must be earlier than the end date.";
+    } elseif ($start_date < $min_start_date) {
+        $error_message = "The start date must not be before 2015.";
+    } elseif ($start_date > $six_months_later) {
+        $error_message = "The start date cannot exceed six months from the current date.";
+    } elseif (!is_null($end_date) && $end_date > $max_end_date) {
+        $error_message = "The end date must not be beyond 2035.";
+    } elseif (!is_null($end_date) && strtotime($end_date) < strtotime($start_date)) {
+        $error_message = "The End date must be after start date.";
+    } elseif (!is_null($end_date) && (strtotime($end_date) - strtotime($start_date)) < 365 * 24 * 60 * 60) {
+        $error_message = "The difference between the start date and the end date must be at least one year.";
     } else {
-        if (!check_permission($conn, $_SESSION['user_id'], $_SESSION['role'], $course_id)) {
-            die("You do not have the necessary permissions to edit this course.");
-        }
+
 
         // Ensure the course name is unique
         $name_query = "SELECT 1 FROM courses WHERE course_name = ? AND course_id != ?";
@@ -186,29 +157,28 @@ if ($conn === null) {
                     $update_stmt = $conn->prepare($update_query);
                     $update_stmt->bind_param('ssssi', $course_name, $course_code, $start_date, $end_date, $course_id);
 
-                    try {
-                        if ($update_stmt->execute()) {
-                            $success_message = "The course has been updated successfully.";
-                            $_SESSION['selected_course'] = [
-                                'course_id' => $course_id,
-                                'course_name' => $course_name,
-                                'course_code' => $course_code,
-                                'start_date' => $start_date,
-                                'end_date' => $end_date
-                            ];
-                        } else {
-                            error_log("Error updating course: " . $update_stmt->error);
-                            $error_message = "An unexpected error occurred while updating the course. Please try again later.";
-                        }
-                    } catch (Exception $e) {
-                        error_log("Exception during course update: " . $e->getMessage());
-                        $error_message = "A system error occurred while updating the course. Please contact support.";
+
+                    if ($update_stmt->execute()) {
+
+                        $success_message = "The course has been updated successfully.";
+                        $_SESSION['selected_course'] = [
+                            'course_id' => $course_id,
+                            'course_name' => $course_name,
+                            'course_code' => $course_code,
+                            'start_date' => $start_date,
+                            'end_date' => $end_date
+                        ];
+                    } else {
+                        error_log("Error updating course: " . $update_stmt->error);
+                        $error_message = "An unexpected error occurred while updating the course. Please try again later.";
                     }
+
                     
                 }
             }
         }
     }
+
 
     
     // Update session with the latest course data
@@ -221,7 +191,8 @@ if ($conn === null) {
     ];
 }
 
-
+// Generate CSRF token
+$csrf_token = generateCsrfToken();
 ?>
 
 <!DOCTYPE html>
@@ -230,53 +201,71 @@ if ($conn === null) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Update Course</title>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const startDateInput = document.getElementById("start_date");
-            const endDateInput = document.getElementById("end_date");
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container { max-width: 800px; margin-top: 50px; }
+        .card { border-radius: 15px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .btn-primary { background-color: #4da8da; border-color: #4da8da; }
+        .btn-primary:hover { background-color: #357abd; border-color: #357abd; }
+        .form-label { font-weight: bold; }
+    </style>
 
-            startDateInput.addEventListener("change", function () {
-                endDateInput.min = this.value;
-            });
-
-            endDateInput.addEventListener("change", function () {
-                startDateInput.max = this.value;
-            });
-        });
-    </script>
 </head>
-<body>
-    <h1>Update Course</h1>
-    <form method="post" action="">
-        <?php $csrf_token = generate_csrf_token(); ?> <!-- Generate CSRF Token and assign it to hidden from field -->
-        <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-        
-        <label for="course_name">Course Name: <span style="color: red;">*</span></label>
-        <input type="text" id="course_name" name="course_name" value="<?php echo htmlspecialchars_decode(htmlspecialchars($course['course_name'] ?? '', ENT_QUOTES, 'UTF-8')); ?>" maxlength="50" required>
-        <br><br>
+<body class="bg-light">
+    <div class="container">
+        <div class="card p-4">
+            <h2 class="mb-4 text-primary">Update Course</h2>
 
-        <label for="course_code">Course Code: <span style="color: red;">*</span></label>
-        <input type="text" id="course_code" name="course_code" value="<?php echo htmlspecialchars_decode(htmlspecialchars($course['course_code'] ?? '', ENT_QUOTES, 'UTF-8')); ?>" maxlength="10" required>
-        <br><br>
+            <form method="post" action="">
+                <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
 
-        <label for="start_date">Start Date: <span style="color: red;">*</span></label>
-        <input type="date" id="start_date" name="start_date" value="<?php echo htmlspecialchars($course['start_date'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required><br><br>
+                <div class="mb-3">
+                    <label for="course_name" class="form-label">Course Name <span style="color: red;">*</span></label>
+                    <input type="text" id="course_name" name="course_name" 
+                           class="form-control" 
+                           value="<?php echo htmlspecialchars_decode(htmlspecialchars($course['course_name'] ?? '', ENT_QUOTES, 'UTF-8')); ?>" 
+                           maxlength="50" required>
+                </div>
 
-        <label for="end_date">End Date:</label>
-        <input type="date" id="end_date" name="end_date" value="<?php echo htmlspecialchars($course['end_date'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><br><br>
+                <div class="mb-3">
+                    <label for="course_code" class="form-label">Course Code <span style="color: red;">*</span></label>
+                    <input type="text" id="course_code" name="course_code" 
+                           class="form-control" 
+                           value="<?php echo htmlspecialchars_decode(htmlspecialchars($course['course_code'] ?? '', ENT_QUOTES, 'UTF-8')); ?>" 
+                           maxlength="10" required>
+                </div>
 
-        <button type="submit">Update Course</button>
-    </form>
+                <div class="mb-3">
+                    <label for="start_date" class="form-label">Start Date <span style="color: red;">*</span></label>
+                    <input type="date" id="start_date" name="start_date" 
+                           class="form-control" 
+                           value="<?php echo htmlspecialchars($course['start_date'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" 
+                           required>
+                </div>
 
-    <?php if (!empty($error_message)): ?>
-        <p style="color: red;"> <?php echo htmlspecialchars($error_message, ENT_QUOTES, 'UTF-8'); ?> </p>
-    <?php endif; ?>
+                <div class="mb-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" id="end_date" name="end_date" 
+                           class="form-control" 
+                           value="<?php echo htmlspecialchars($course['end_date'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                </div>
 
-    <?php if (isset($success_message)): ?>
-        <p style="color: green;"> <?php echo htmlspecialchars($success_message, ENT_QUOTES, 'UTF-8'); ?> </p>
-    <?php endif; ?>
+                <!-- Success or Error Messages -->
+                <?php if (!empty($success_message)): ?>
+                    <div class="alert alert-success mt-3"><?= htmlspecialchars($success_message, ENT_QUOTES, 'UTF-8') ?></div>
+                <?php endif; ?>
+                <?php if (!empty($error_message)): ?>
+                    <div class="alert alert-danger mt-3"><?= htmlspecialchars($error_message, ENT_QUOTES, 'UTF-8') ?></div>
+                <?php endif; ?>
 
-    <br>
-    <a href="read_course.php">Back to Manage Courses</a>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Update Course</button>
+                    <a href="read_course.php" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>
+
+
