@@ -9,10 +9,12 @@ enforceSessionTimeout(300);
 //Database Connection Checks
 validateDatabaseConnection($conn);
 
+
 // Check user role
 $isAdmin = isAdmin();
 $isFaculty = isFaculty();
 $user_id = $_SESSION['user_id'];
+
 
 // // Fetch courses based on role
 if ($isAdmin) {
@@ -126,15 +128,16 @@ $csrf_token = generateCsrfToken();
                         <?php if (!empty($courses)): ?>
                             <?php foreach ($courses as $course): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($course['course_code']) ?></td>
-                                    <td><?= htmlspecialchars($course['course_name']) ?></td>
-                                    <td><?= date('d M Y', strtotime($course['start_date'])) ?></td>
+                                <td><?= htmlspecialchars($course['course_code'], ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td><?= htmlspecialchars($course['course_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td><?= htmlspecialchars(date('d M Y', strtotime($course['start_date'])), ENT_QUOTES, 'UTF-8') ?></td>
                                     <td>
                                         <span class="badge status-badge 
                                             <?= !$course['end_date'] ? 'bg-primary' : (strtotime($course['end_date']) > time() ? 'bg-warning text-dark' : 'bg-secondary') ?>">
-                                            <?= !$course['end_date'] ? 'Ongoing' : (strtotime($course['end_date']) > time() ? 'Ongoing (Ends ' . date('d M Y', strtotime($course['end_date'])) . ')' : date('d M Y', strtotime($course['end_date']))) ?>
+                                            <?= !$course['end_date'] ? 'Ongoing' : (strtotime($course['end_date']) > time() ? 'Ongoing (Ends ' . htmlspecialchars(date('d M Y', strtotime($course['end_date'])), ENT_QUOTES, 'UTF-8') . ')' : htmlspecialchars(date('d M Y', strtotime($course['end_date'])), ENT_QUOTES, 'UTF-8')) ?>
                                         </span>
                                     </td>
+
                                     <td>
                                         <a href="update_course.php?course_id=<?= $course['course_id'] ?>" class="btn btn-sm btn-outline-primary">
                                             Manage
