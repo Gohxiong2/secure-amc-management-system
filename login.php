@@ -116,7 +116,7 @@ if (isset($_GET['error']) && $_GET['error'] === 'session_expired') {
                             </div>
 
                             <div class="text-center">
-                            <a href="" class="text-primary text-decoration-none">Forgot password?</a>
+                            <a href="forgot_password.php" class="text-primary text-decoration-none">Forgot password?</a>
                             </div>
                         </form>
                     </div>
