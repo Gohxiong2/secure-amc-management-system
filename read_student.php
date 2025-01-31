@@ -72,7 +72,7 @@ $csrf_token = generateCsrfToken();
                     <i class="bi bi-arrow-left"></i> Back to Dashboard
                 </a>
                 <div>
-                    <?php if ($isAdmin): ?>
+                    <?php if ($isAdmin || $isFaculty): ?>
                         <a href="create_student.php" class="btn btn-primary">Create New</a>
                     <?php endif; ?>
                 </div>
@@ -90,7 +90,7 @@ $csrf_token = generateCsrfToken();
                             <th>Phone</th>
                             <th>Department</th>
                             <th>Enrolled Courses</th>
-                            <?php if ($isAdmin): ?>
+                            <?php if ($isAdmin || $isFaculty): ?>
                                 <th>Actions</th>
                             <?php endif; ?>
                         </tr>
@@ -118,12 +118,12 @@ $csrf_token = generateCsrfToken();
                                    class="btn btn-sm btn-outline-primary me-2">Manage</a>
                                 <form method="POST" action="delete_student.php" class="d-inline">
                                     <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
-                                    <input type="hidden" name="student_id" value="<?= $student['student_id'] ?>">
+                                    <input type="hidden" name="user_id" value="<?= $student['user_id'] ?>">
                                     <button type="submit" class="btn btn-sm btn-outline-danger" 
                                         onclick="return confirm('Are you sure?')">Delete</button>
                                 </form>
                             </td>
-                            <?php elseif ($isFaculty); ?>
+                            <?php elseif ($isFaculty): ?>
                             <td>
                                 <a href="update_student.php?id=<?= $student['student_id'] ?>" 
                                    class="btn btn-sm btn-outline-primary me-2">Manage</a>

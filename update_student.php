@@ -6,7 +6,6 @@ verifyAdminOrFacultyAccess();
 
 $student_id = $_GET['id'] ?? 0;
 $student = [];
-$selectedCourseIds = [];
 
 // Fetch student data
 $stmt = $conn->prepare("SELECT * FROM students WHERE student_id = ?");
@@ -14,17 +13,8 @@ $stmt->bind_param("i", $student_id);
 $stmt->execute();
 $student = $stmt->get_result()->fetch_assoc();
 
-// Fetch existing courses
-$courseStmt = $conn->prepare("SELECT course_id FROM student_courses WHERE student_id = ?");
-$courseStmt->bind_param("i", $student_id);
-$courseStmt->execute();
-$selectedCourses = $courseStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$selectedCourseIds = array_column($selectedCourses, 'course_id');
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!validateCsrfToken($_POST['csrf_token'])) {
-        die("Invalid CSRF token");
-    }
+    validateCsrfToken($_POST['csrf_token']);
 
     // Sanitize inputs
     $name = sanitizeInput($_POST['name']);
@@ -32,38 +22,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phone = sanitizeInput($_POST['phone']);
     $student_number = sanitizeInput($_POST['student_number']);
     $class_id = sanitizeInput($_POST['class_id']);
-    $department = sanitizeInput($_POST['department']);
-    $courses = $_POST['courses'] ?? [];
+    $department_id = sanitizeInput($_POST['department_id']);
 
     // Validation
     $errors = [];
     if (empty($name)) $errors[] = "Name is required";
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Invalid email format";
-    if (!preg_match('/^[0-9]{10,15}$/', $phone)) $errors[] = "Invalid phone format";
+    if (!preg_match('/^[0-9]{8,15}$/', $phone)) $errors[] = "Phone must be 8-15 digits";
     if (!preg_match('/^[A-Za-z0-9]{8}$/', $student_number)) $errors[] = "Student number must be 8 alphanumeric characters";
-
-    // Fetch department_id
-    $departmentStmt = $conn->prepare("SELECT department_id FROM department WHERE name = ?");
-    $departmentStmt->bind_param("s", $department);
-    $departmentStmt->execute();
-    $departmentResult = $departmentStmt->get_result();
-    
-    if ($departmentResult->num_rows === 0) {
-        $errors[] = "Invalid department";
-    } else {
-        $departmentRow = $departmentResult->fetch_assoc();
-        $department_id = $departmentRow['department_id'];
-    }
 
     if (empty($errors)) {
         try {
-            // Update student
+            // Update student record
             $stmt = $conn->prepare("UPDATE students SET 
                 name = ?, email = ?, phone = ?, student_number = ?, 
                 class_id = ?, department_id = ? 
                 WHERE student_id = ?");
-            
-            $stmt->bind_param("ssssisi",
+
+            $stmt->bind_param("ssssiii",
                 $name,
                 $email,
                 $phone,
@@ -72,40 +48,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $department_id,
                 $student_id
             );
-            
-            if ($stmt->execute()) {
-                // Update courses
-                $conn->begin_transaction();
-                
-                try {
-                    // Delete existing courses
-                    $deleteStmt = $conn->prepare("DELETE FROM student_courses WHERE student_id = ?");
-                    $deleteStmt->bind_param("i", $student_id);
-                    $deleteStmt->execute();
 
-                    // Insert new courses
-                    if (!empty($courses)) {
-                        $insertStmt = $conn->prepare("INSERT INTO student_courses 
-                            (student_id, course_id, status) VALUES (?, ?, 'start')");
-                        foreach ($courses as $course_id) {
-                            if (!is_numeric($course_id)) {
-                                throw new Exception("Invalid course ID");
-                            }
-                            $insertStmt->bind_param("ii", $student_id, $course_id);
-                            $insertStmt->execute();
-                        }
-                    }
-                    
-                    $conn->commit();
-                } catch (Exception $e) {
-                    $conn->rollback();
-                    throw $e;
-                }
-                
-                $_SESSION['success'] = "Student updated successfully";
-                header("Location: read_student.php");
-                exit();
-            }
+            $stmt->execute();
+        
+            $_SESSION['success'] = "Student updated successfully";
+            header("Location: read_student.php");
+            exit();
         } catch (Exception $e) {
             error_log("Update error: " . $e->getMessage());
             $_SESSION['error'] = "Error updating student: " . $e->getMessage();
@@ -178,31 +126,14 @@ $csrf_token = generateCsrfToken();
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Department</label>
-                        <select name="department" class="form-select" required>
+                        <select name="department_id" class="form-select" required>
                             <?php while($dept = $departments->fetch_assoc()): ?>
-                                <option value="<?= htmlspecialchars($dept['name']) ?>"
+                                <option value="<?= $dept['department_id'] ?>"
                                     <?= ($dept['department_id'] == $student['department_id']) ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($dept['name']) ?>
                                 </option>
                             <?php endwhile; ?>
                         </select>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Courses</label>
-                        <div class="row g-2">
-                            <?php while($course = $allCourses->fetch_assoc()): ?>
-                                <div class="col-md-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" 
-                                            name="courses[]" value="<?= $course['course_id'] ?>"
-                                            <?= in_array($course['course_id'], $selectedCourseIds) ? 'checked' : '' ?>>
-                                        <label class="form-check-label">
-                                            <?= htmlspecialchars($course['course_name']) ?>
-                                        </label>
-                                    </div>
-                                </div>
-                            <?php endwhile; ?>
-                        </div>
                     </div>
                     <div class="col-12 mt-4">
                         <button type="submit" class="btn btn-primary px-4">Update Student</button>

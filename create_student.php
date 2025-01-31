@@ -11,9 +11,7 @@ $departments_result = mysqli_query($conn, "SELECT * FROM department");
 $departments = mysqli_fetch_all($departments_result, MYSQLI_ASSOC);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!validateCsrfToken($_POST['csrf_token'])) {
-        die("Invalid CSRF token");
-    }
+    validateCsrfToken($_POST['csrf_token']);
 
     // Sanitize inputs
     $name = sanitizeInput($_POST['name']);
@@ -70,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 3. Assign courses
             if (!empty($courses)) {
                 $stmt = mysqli_prepare($conn, "INSERT INTO student_courses 
-                    (student_id, course_id, status) VALUES (?, ?, 'start')");
+                    (student_id, course_id, status) VALUES (?, ?, '')");
                 
                 foreach ($courses as $course_id) {
                     $course_id = filter_var($course_id, FILTER_VALIDATE_INT);
