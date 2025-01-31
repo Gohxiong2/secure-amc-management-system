@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 31, 2025 at 02:39 PM
+-- Generation Time: Jan 31, 2025 at 03:40 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -154,7 +154,14 @@ CREATE TABLE IF NOT EXISTS `students` (
   KEY `user_id` (`user_id`),
   KEY `class_id` (`class_id`),
   KEY `students_ibfk_3` (`department_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `students`
+--
+
+INSERT INTO `students` (`student_id`, `user_id`, `name`, `email`, `phone`, `student_number`, `class_id`, `department_id`) VALUES
+(7, 9, 'student', 'student@gmail.com', '96581652', 'S3213141', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -170,7 +177,14 @@ CREATE TABLE IF NOT EXISTS `student_courses` (
   PRIMARY KEY (`student_course_id`),
   KEY `student_id` (`student_id`),
   KEY `course_id` (`course_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `student_courses`
+--
+
+INSERT INTO `student_courses` (`student_course_id`, `student_id`, `course_id`, `status`) VALUES
+(6, 7, 1, '');
 
 -- --------------------------------------------------------
 
@@ -184,7 +198,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `hashed_password` varchar(255) NOT NULL,
   `role` enum('admin','faculty','student') NOT NULL,
   PRIMARY KEY (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
@@ -192,7 +206,8 @@ CREATE TABLE IF NOT EXISTS `users` (
 
 INSERT INTO `users` (`user_id`, `username`, `hashed_password`, `role`) VALUES
 (1, 'admin', '$2y$10$6PUCvvM8vbxccn98lp.TteK4qOGqLhApHmmMuP.csDlW612cnmovm', 'admin'),
-(2, 'faculty', '$2y$10$6PUCvvM8vbxccn98lp.TteK4qOGqLhApHmmMuP.csDlW612cnmovm', 'faculty');
+(2, 'faculty', '$2y$10$6PUCvvM8vbxccn98lp.TteK4qOGqLhApHmmMuP.csDlW612cnmovm', 'faculty'),
+(9, 'S3213141', '$2y$10$F.TsOBeO6B3001LyiLKMZuQUjuIw8mes7FsBu6BFgwhuLzfGWaDdW', 'student');
 
 --
 -- Constraints for dumped tables
@@ -217,7 +232,7 @@ ALTER TABLE `grades`
 -- Constraints for table `students`
 --
 ALTER TABLE `students`
-  ADD CONSTRAINT `students_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `students_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `students_ibfk_2` FOREIGN KEY (`class_id`) REFERENCES `classes` (`class_id`),
   ADD CONSTRAINT `students_ibfk_3` FOREIGN KEY (`department_id`) REFERENCES `department` (`department_id`);
 
@@ -225,7 +240,7 @@ ALTER TABLE `students`
 -- Constraints for table `student_courses`
 --
 ALTER TABLE `student_courses`
-  ADD CONSTRAINT `student_courses_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`),
+  ADD CONSTRAINT `student_courses_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `student_courses_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`);
 COMMIT;
 
