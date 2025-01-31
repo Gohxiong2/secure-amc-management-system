@@ -6,9 +6,10 @@ verifyAuthentication();
 
 // Check if admin to show all records
 $isAdmin = isAdmin();
+$isFaculty = isFaculty();
 $student_id = $_SESSION['user_id'];
 
-if ($isAdmin) {
+if ($isAdmin || $isFaculty) {
     // Get all students with their departments and courses
     $students = $conn->query("
         SELECT students.*, 
@@ -121,6 +122,11 @@ $csrf_token = generateCsrfToken();
                                     <button type="submit" class="btn btn-sm btn-outline-danger" 
                                         onclick="return confirm('Are you sure?')">Delete</button>
                                 </form>
+                            </td>
+                            <?php elseif ($isFaculty); ?>
+                            <td>
+                                <a href="update_student.php?id=<?= $student['student_id'] ?>" 
+                                   class="btn btn-sm btn-outline-primary me-2">Manage</a>
                             </td>
                             <?php endif; ?>
                         </tr>

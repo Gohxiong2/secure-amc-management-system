@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 25, 2025 at 05:16 PM
+-- Generation Time: Jan 31, 2025 at 02:27 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -36,15 +36,7 @@ CREATE TABLE IF NOT EXISTS `classes` (
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
   PRIMARY KEY (`class_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `classes`
---
-
-INSERT INTO `classes` (`class_id`, `class_name`, `duration`, `start_date`, `end_date`) VALUES
-(1, 'CS101-A', 'SEMESTER', '2024-01-01', '2024-06-01'),
-(2, 'MATH101-A', 'SEMESTER', '2024-01-01', '2024-06-01');
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -60,15 +52,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   `end_date` date DEFAULT NULL,
   PRIMARY KEY (`course_id`),
   UNIQUE KEY `course_code` (`course_code`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `courses`
---
-
-INSERT INTO `courses` (`course_id`, `course_name`, `course_code`, `start_date`, `end_date`) VALUES
-(1, 'Computer Science', 'CS101', '2024-01-01', '2024-06-01'),
-(2, 'Mathematics', 'MATH101', '2024-01-01', '2024-06-01');
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -80,15 +64,7 @@ CREATE TABLE IF NOT EXISTS `department` (
   `department_id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   PRIMARY KEY (`department_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `department`
---
-
-INSERT INTO `department` (`department_id`, `name`) VALUES
-(1, 'Cybersecurity'),
-(2, 'Artifical Intelligence');
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -105,14 +81,7 @@ CREATE TABLE IF NOT EXISTS `faculty` (
   KEY `user_id` (`user_id`),
   KEY `course_id` (`course_id`),
   KEY `class_id` (`class_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `faculty`
---
-
-INSERT INTO `faculty` (`faculty_id`, `user_id`, `course_id`, `class_id`) VALUES
-(1, 2, 1, 1);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -130,15 +99,7 @@ CREATE TABLE IF NOT EXISTS `grades` (
   PRIMARY KEY (`grade_id`),
   KEY `student_id` (`student_id`),
   KEY `course_id` (`course_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `grades`
---
-
-INSERT INTO `grades` (`grade_id`, `student_id`, `course_id`, `grade`, `total_marks`, `grade_date`) VALUES
-(1, 1, 1, 'A', 95, '2025-01-24 08:09:27'),
-(2, 2, 2, 'B+', 88, '2025-01-24 08:09:27');
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -161,15 +122,7 @@ CREATE TABLE IF NOT EXISTS `students` (
   KEY `user_id` (`user_id`),
   KEY `class_id` (`class_id`),
   KEY `students_ibfk_3` (`department_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `students`
---
-
-INSERT INTO `students` (`student_id`, `user_id`, `name`, `email`, `phone`, `student_number`, `class_id`, `department_id`) VALUES
-(1, 3, 'John Doe', 'johndoe@example.com', '1234567890', 'S1234567', 1, 2),
-(2, 3, 'Jane Smith', 'janesmith@example.com', '0987654321', 'S7654321', 2, 1);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -185,17 +138,7 @@ CREATE TABLE IF NOT EXISTS `student_courses` (
   PRIMARY KEY (`student_course_id`),
   KEY `student_id` (`student_id`),
   KEY `course_id` (`course_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `student_courses`
---
-
-INSERT INTO `student_courses` (`student_course_id`, `student_id`, `course_id`, `status`) VALUES
-(9, 2, 2, 'start'),
-(11, 2, 1, ''),
-(13, 1, 1, 'start'),
-(14, 1, 2, 'start');
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -209,19 +152,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `hashed_password` varchar(255) NOT NULL,
   `role` enum('admin','faculty','student') NOT NULL,
   PRIMARY KEY (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `users`
---
-
-INSERT INTO `users` (`user_id`, `username`, `hashed_password`, `role`) VALUES
-(1, 'test', '$2y$10$gp.ABskl6Vw.SiTRrXAd8OZVNoo26mKQlDyO1g2gumM/nykuONqde', 'admin'),
-(2, 'admin_user', 'hashedpassword123', 'admin'),
-(3, 'faculty_user', 'hashedpassword123', 'faculty'),
-(4, 'student_user', 'hashedpassword123', 'student'),
-(5, 'test2', '$2y$10$vQSGTHBf16OUKxKMc/S0oOgGmMr5on/VMtNMBiyMrmQB7wW0kXy/G', 'admin'),
-(6, 'student', '$2y$10$M..s0HB4H5qVpwYUEQqd9.vbWHggiDLnp0vWZni/2TlpbAiwtYSOS', 'student');
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Constraints for dumped tables
