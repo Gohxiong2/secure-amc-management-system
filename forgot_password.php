@@ -1,5 +1,31 @@
 <?php
-require_once "db_connect.php"
+require_once "db_connect.php";
+require_once "security.php";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = sanitizeInput($_POST['email']);
+    if (empty($email)){
+        $message = "Email cannot be empty!";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)){
+        $message = "Invalid email format!";
+    } else {
+        $stmt = $conn -> prepare("SELECT user_id FROM students WHERE email = ?");
+
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+
+        $stmt->store_result();
+        if ($stmt->num_rows == 0) {
+            $message = "Email not found in the database!";
+        } else {
+            $stmt->bind_result($user_id);
+            $stmt->fetch();
+            $_SESSION['reset_user_id'] = $user_id;
+            header("Location: password_link.php");
+            $stmt->close();
+        }
+    }
+}
 ?>
 
 
@@ -33,15 +59,13 @@ require_once "db_connect.php"
                             <div class="alert alert-danger"><?php echo htmlspecialchars($message); ?></div>
                         <?php endif; ?>
 
-                        <form method="post" action="">
+                        <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email</label>
                                 <input type="text" class="form-control rounded-pill" id="email" name="email" required>
                             </div>
                             <div class="d-grid mb-3">
-                                <a href="password_link.php">
-                                    <button type="submit" class="btn btn-primary rounded-pill">Send Link</button>
-                                </a>
+                                <button type="submit" class="btn btn-primary rounded-pill">Send Link</button>
                             </div>
                         </form>
                     </div>
