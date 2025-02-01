@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 31, 2025 at 03:40 PM
+-- Generation Time: Jan 31, 2025 at 04:48 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -101,19 +101,17 @@ CREATE TABLE IF NOT EXISTS `faculty` (
   `faculty_id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `course_id` int(11) DEFAULT NULL,
-  `class_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`faculty_id`),
   KEY `user_id` (`user_id`),
-  KEY `course_id` (`course_id`),
-  KEY `class_id` (`class_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  KEY `course_id` (`course_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `faculty`
 --
 
-INSERT INTO `faculty` (`faculty_id`, `user_id`, `course_id`, `class_id`) VALUES
-(1, 2, 1, 1);
+INSERT INTO `faculty` (`faculty_id`, `user_id`, `course_id`) VALUES
+(2, 2, 1);
 
 -- --------------------------------------------------------
 
@@ -218,8 +216,7 @@ INSERT INTO `users` (`user_id`, `username`, `hashed_password`, `role`) VALUES
 --
 ALTER TABLE `faculty`
   ADD CONSTRAINT `faculty_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
-  ADD CONSTRAINT `faculty_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`),
-  ADD CONSTRAINT `faculty_ibfk_3` FOREIGN KEY (`class_id`) REFERENCES `classes` (`class_id`);
+  ADD CONSTRAINT `faculty_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`);
 
 --
 -- Constraints for table `grades`

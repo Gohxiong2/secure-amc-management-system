@@ -33,7 +33,9 @@ function isFaculty() {
 // Input
 
 function sanitizeInput($data) {
-    return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
+    $data = trim($data);                  // Remove extra spaces
+    $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8'); // Convert special characters to HTML entities
+    return $data;
 }
 
 //Verifications

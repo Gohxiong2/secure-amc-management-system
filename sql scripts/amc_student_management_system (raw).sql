@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 31, 2025 at 03:40 PM
+-- Generation Time: Jan 31, 2025 at 04:49 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -76,11 +76,9 @@ CREATE TABLE IF NOT EXISTS `faculty` (
   `faculty_id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `course_id` int(11) DEFAULT NULL,
-  `class_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`faculty_id`),
   KEY `user_id` (`user_id`),
-  KEY `course_id` (`course_id`),
-  KEY `class_id` (`class_id`)
+  KEY `course_id` (`course_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -163,8 +161,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 --
 ALTER TABLE `faculty`
   ADD CONSTRAINT `faculty_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
-  ADD CONSTRAINT `faculty_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`),
-  ADD CONSTRAINT `faculty_ibfk_3` FOREIGN KEY (`class_id`) REFERENCES `classes` (`class_id`);
+  ADD CONSTRAINT `faculty_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`);
 
 --
 -- Constraints for table `grades`

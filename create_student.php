@@ -3,12 +3,32 @@ require_once 'db_connect.php';
 require_once 'security.php';
 verifyAdminOrFacultyAccess();
 
+$user_id = $_SESSION['user_id'];
 // Initialize variables
 $errors = [];
 $classes = [];
 $courses = [];
-$departments_result = mysqli_query($conn, "SELECT * FROM department");
-$departments = mysqli_fetch_all($departments_result, MYSQLI_ASSOC);
+$allowedCourseIds = [];
+$isAdmin = isAdmin();
+$isFaculty = isFaculty();
+
+// Get departments, classes, and courses
+$departments = $conn->query("SELECT * FROM department");
+$classes = $conn->query("SELECT * FROM classes");
+
+if ($isAdmin) {
+    $courses = $conn->query("SELECT * FROM courses");
+} elseif ($isFaculty) {
+    $stmt = $conn->prepare("SELECT faculty.course_id, courses.* FROM faculty JOIN courses ON courses.course_id = faculty.course_id WHERE faculty.user_id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $courses = $stmt->get_result();
+    $stmt->close();
+}
+
+foreach ($courses as $course) {
+    $allowedCourseIds[] = $course["course_id"];
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     validateCsrfToken($_POST['csrf_token']);
@@ -18,9 +38,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = sanitizeInput($_POST['email']);
     $phone = sanitizeInput($_POST['phone']);
     $student_number = sanitizeInput($_POST['student_number']);
+
+    // Integers can't be XSS attacks
     $class_id = filter_input(INPUT_POST, 'class_id', FILTER_VALIDATE_INT);
     $department_id = filter_input(INPUT_POST, 'department_id', FILTER_VALIDATE_INT);
-    $courses = $_POST['courses'] ?? [];
+
+    $selectedCourses = $_POST['courses'] ?? [];
     $password = bin2hex(random_bytes(8)); // Generate random password
 
     // Validation
@@ -31,26 +54,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($department_id <= 0) $errors[] = "Invalid department";
 
     if (empty($errors)) {
-        mysqli_begin_transaction($conn);
-        
+        // Begin transaction
+        $conn->begin_transaction();
         try {
             // 1. Create user account
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = mysqli_prepare($conn, "INSERT INTO users 
-                (username, hashed_password, role) VALUES (?, ?, 'student')");
-            mysqli_stmt_bind_param($stmt, 'ss', $student_number, $hashed_password);
-            
-            if (!mysqli_stmt_execute($stmt)) {
-                throw new Exception("User creation failed: " . mysqli_error($conn));
+            $stmt = $conn->prepare("INSERT INTO users (username, hashed_password, role) VALUES (?, ?, 'student')");
+            $stmt->bind_param('ss', $student_number, $hashed_password);
+            if (!$stmt->execute()) {
+                throw new Exception("User creation failed: " . $conn->error);
             }
-            $user_id = mysqli_insert_id($conn);
+            $user_id = $conn->insert_id;
+            $stmt->close();
 
             // 2. Create student record
-            $stmt = mysqli_prepare($conn, "INSERT INTO students 
-                (user_id, name, email, phone, student_number, class_id, department_id) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)");
-
-            mysqli_stmt_bind_param($stmt, 'issssii', 
+            $stmt = $conn->prepare("INSERT INTO students (user_id, name, email, phone, student_number, class_id, department_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param('issssii', 
                 $user_id,
                 $name,
                 $email,
@@ -59,48 +78,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $class_id,
                 $department_id
             );
-            
-            if (!mysqli_stmt_execute($stmt)) {
-                throw new Exception("Student creation failed: " . mysqli_error($conn));
+            if (!$stmt->execute()) {
+                throw new Exception("Student creation failed: " . $conn->error);
             }
-            $student_id = mysqli_insert_id($conn);
+            $student_id = $conn->insert_id;
+            $stmt->close();
 
             // 3. Assign courses
-            if (!empty($courses)) {
-                $stmt = mysqli_prepare($conn, "INSERT INTO student_courses 
-                    (student_id, course_id, status) VALUES (?, ?, '')");
-                
-                foreach ($courses as $course_id) {
+            if (!empty($selectedCourses)) {
+                $stmt = $conn->prepare("INSERT INTO student_courses (student_id, course_id, status) VALUES (?, ?, '')");
+                foreach ($selectedCourses as $course_id) {
+
+                    // Integers can't do XSS attack
                     $course_id = filter_var($course_id, FILTER_VALIDATE_INT);
                     if (!$course_id) continue;
-                    
-                    mysqli_stmt_bind_param($stmt, 'ii', $student_id, $course_id);
-                    if (!mysqli_stmt_execute($stmt)) {
-                        throw new Exception("Course assignment failed: " . mysqli_error($conn));
+                    // Check if selected courses are allowed for faculty
+                    if (!in_array($course_id, $allowedCourseIds)) {
+                        throw new Exception("Selected a course that's beyond faculty's scope!" . $conn->error);
+                    }
+                    $stmt->bind_param('ii', $student_id, $course_id);
+                    if (!$stmt->execute()) {
+                        throw new Exception("Course assignment failed: " . $conn->error);
                     }
                 }
+                $stmt->close();
             }
 
-            mysqli_commit($conn);
+            $conn->commit();
             $_SESSION['success'] = "Student created successfully! Temporary password: $password";
             header("Location: read_student.php");
             exit();
         } catch (Exception $e) {
-            mysqli_rollback($conn);
+            $conn->rollback();
             error_log("Error: " . $e->getMessage());
             $_SESSION['error'] = "Error creating student: " . $e->getMessage();
         }
     } else {
-        $_SESSION['error'] = implode($errors);
+        $_SESSION['error'] = implode(", ", $errors);
     }
 }
-
-// Fetch dropdown data
-$classes_result = mysqli_query($conn, "SELECT * FROM classes");
-$classes = mysqli_fetch_all($classes_result, MYSQLI_ASSOC);
-
-$courses_result = mysqli_query($conn, "SELECT * FROM courses");
-$courses = mysqli_fetch_all($courses_result, MYSQLI_ASSOC);
 
 $csrf_token = generateCsrfToken();
 ?>
@@ -149,21 +165,21 @@ $csrf_token = generateCsrfToken();
                     <div class="col-md-6">
                         <label class="form-label">Class</label>
                         <select name="class_id" class="form-select" required>
-                            <?php foreach ($classes as $class): ?>
+                            <?php while ($class = $classes->fetch_assoc()): ?>
                                 <option value="<?= $class['class_id'] ?>">
                                     <?= htmlspecialchars($class['class_name']) ?>
                                 </option>
-                            <?php endforeach; ?>
+                            <?php endwhile; ?>
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Department</label>
                         <select name="department_id" class="form-select" required>
-                                <?php foreach ($departments as $dept): ?>
-                                    <option value="<?= $dept['department_id'] ?>">
-                                        <?= htmlspecialchars($dept['name']) ?>
-                                    </option>
-                                <?php endforeach; ?>
+                            <?php while ($dept = $departments->fetch_assoc()): ?>
+                                <option value="<?= $dept['department_id'] ?>">
+                                    <?= htmlspecialchars($dept['name']) ?>
+                                </option>
+                            <?php endwhile; ?>
                         </select>
                     </div>
                     <div class="col-12">
@@ -173,7 +189,7 @@ $csrf_token = generateCsrfToken();
                                 <div class="col-md-4">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" 
-                                            name="courses[]" value="<?= $course['course_id'] ?>">
+                                               name="courses[]" value="<?= $course['course_id'] ?>">
                                         <label class="form-check-label">
                                             <?= htmlspecialchars($course['course_name']) ?>
                                         </label>

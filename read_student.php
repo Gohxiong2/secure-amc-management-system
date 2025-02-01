@@ -7,9 +7,9 @@ verifyAuthentication();
 // Check if admin to show all records
 $isAdmin = isAdmin();
 $isFaculty = isFaculty();
-$student_id = $_SESSION['user_id'];
+$user_id = $_SESSION['user_id'];
 
-if ($isAdmin || $isFaculty) {
+if ($isAdmin) {
     // Get all students with their departments and courses
     $students = $conn->query("
         SELECT students.*, 
@@ -19,6 +19,22 @@ if ($isAdmin || $isFaculty) {
         JOIN department ON students.department_id = department.department_id
         LEFT JOIN student_courses ON students.student_id = student_courses.student_id
         LEFT JOIN courses ON student_courses.course_id = courses.course_id
+        GROUP BY students.student_id
+    ");
+} 
+
+if ($isFaculty) {
+    // Get student records related to faculty courses
+    $stmt = $conn->prepare("
+        SELECT students.*, 
+        department.name AS department_name,
+        GROUP_CONCAT(courses.course_name SEPARATOR ', ') AS enrolled_courses
+        FROM students
+        JOIN department ON students.department_id = department.department_id
+        LEFT JOIN student_courses ON students.student_id = student_courses.student_id
+        LEFT JOIN courses ON student_courses.course_id = courses.course_id
+        JOIN faculty ON student_courses.course_id = faculty.course_id
+        WHERE faculty.user_id = ?
         GROUP BY students.student_id
     ");
 } else {
@@ -34,7 +50,10 @@ if ($isAdmin || $isFaculty) {
         WHERE students.user_id = ?
         GROUP BY students.student_id
     ");
-    $stmt->bind_param("i", $student_id);
+}
+
+if (!($isAdmin)) {
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $students = $stmt->get_result();
 }
@@ -96,6 +115,7 @@ $csrf_token = generateCsrfToken();
                         </tr>
                     </thead>
                     <tbody>
+                        <?php if (!(empty($students))): ?>
                         <?php while($student = $students->fetch_assoc()): ?>
                         <tr>
                             <td><?= htmlspecialchars($student['student_number']) ?></td>
@@ -131,8 +151,14 @@ $csrf_token = generateCsrfToken();
                             <?php endif; ?>
                         </tr>
                         <?php endwhile; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
+                <?php if (empty($students)): ?>
+                    <div class="empty-state p-5 text-center mt-4">
+                        <h3 class="h5 text-muted">No student records available</h3>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

@@ -5,6 +5,23 @@ require_once 'security.php';
 verifyAdminOrFacultyAccess();
 
 $student_id = $_GET['id'] ?? 0;
+$user_id = $_SESSION['user_id'] ?? 0;
+
+$isFaculty = isFaculty();
+
+if ($isFaculty) {
+    $stmt = $conn->prepare("SELECT faculty.user_id FROM student_courses JOIN faculty ON faculty.course_id = student_courses.course_id WHERE student_courses.student_id = ?");
+    $stmt->bind_param("i", $student_id);
+    $stmt->execute();
+    $faculty = $stmt->get_result();
+    $user_ids = array_column($faculty->fetch_all(MYSQLI_ASSOC), 'user_id');
+
+    if ($faculty->num_rows === 0 || !in_array($user_id, $user_ids)) {
+        header("Location: 403.php");
+        exit();
+    }
+}
+
 $student = [];
 
 // Fetch student data
@@ -12,6 +29,10 @@ $stmt = $conn->prepare("SELECT * FROM students WHERE student_id = ?");
 $stmt->bind_param("i", $student_id);
 $stmt->execute();
 $student = $stmt->get_result()->fetch_assoc();
+
+// Fetch dropdown data
+$classes = $conn->query("SELECT * FROM classes");
+$departments = $conn->query("SELECT * FROM department");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     validateCsrfToken($_POST['csrf_token']);
@@ -63,10 +84,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch dropdown data
-$classes = $conn->query("SELECT * FROM classes");
-$allCourses = $conn->query("SELECT * FROM courses");
-$departments = $conn->query("SELECT * FROM department");
 $csrf_token = generateCsrfToken();
 ?>
 
