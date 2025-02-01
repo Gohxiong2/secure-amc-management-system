@@ -38,9 +38,7 @@ try {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!validateCsrfToken($_POST['csrf_token'])) {
-        die("Invalid CSRF token");
-    }
+    validateCsrfToken($_POST['csrf_token']);
 
     $student_id = sanitizeInput($_POST['student_id']);
     $course_id = sanitizeInput($_POST['course_id']);

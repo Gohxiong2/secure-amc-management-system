@@ -30,10 +30,6 @@ $stmt->bind_param("i", $student_id);
 $stmt->execute();
 $student = $stmt->get_result()->fetch_assoc();
 
-// Fetch dropdown data
-$classes = $conn->query("SELECT * FROM classes");
-$departments = $conn->query("SELECT * FROM department");
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     validateCsrfToken($_POST['csrf_token']);
 
@@ -51,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Invalid email format";
     if (!preg_match('/^[0-9]{8,15}$/', $phone)) $errors[] = "Phone must be 8-15 digits";
     if (!preg_match('/^[A-Za-z0-9]{8}$/', $student_number)) $errors[] = "Student number must be 8 alphanumeric characters";
+    if ($department_id <= 0) $errors[] = "Invalid department";
 
     if (empty($errors)) {
         try {
@@ -80,9 +77,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['error'] = "Error updating student: " . $e->getMessage();
         }
     } else {
-        $_SESSION['errors'] = $errors;
+        $_SESSION['error'] = implode(", ", $errors);
     }
 }
+
+$classes = $conn->query("SELECT * FROM classes");
+$departments = $conn->query("SELECT * FROM department");
 
 $csrf_token = generateCsrfToken();
 ?>

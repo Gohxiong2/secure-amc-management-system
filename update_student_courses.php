@@ -72,10 +72,8 @@ $available_courses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!validateCsrfToken($_POST['csrf_token'])) {
-        die("Invalid CSRF token");
-    }
-
+    validateCsrfToken($_POST['csrf_token']);
+    
     try {
         // Update Status Form
         if (isset($_POST['update_status'])) {
