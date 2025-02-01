@@ -118,10 +118,10 @@ $csrf_token = generateCsrfToken();
                         <?php if (!(empty($students))): ?>
                         <?php while($student = $students->fetch_assoc()): ?>
                         <tr>
-                            <td><?= htmlspecialchars($student['student_number']) ?></td>
-                            <td><?= htmlspecialchars($student['name']) ?></td>
-                            <td><?= htmlspecialchars($student['email']) ?></td>
-                            <td><?= htmlspecialchars($student['phone']) ?></td>
+                            <td><?= $student['student_number'] ?></td>
+                            <td><?= $student['name'] ?></td>
+                            <td><?= $student['email'] ?></td>
+                            <td><?= $student['phone'] ?></td>
                             <td>
                                 <span class="badge bg-primary">
                                     <?= htmlspecialchars($student['department_name']) ?>
