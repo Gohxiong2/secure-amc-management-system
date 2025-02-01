@@ -1,3 +1,15 @@
+<?php
+session_start();
+
+if (!isset($_SESSION['reset_token']) || !isset($_SESSION['reset_user_id'])) {
+    echo "Invalid password reset request!";
+    exit();
+}
+
+// Create the reset link dynamically
+$reset_link = "reset_password.php?token=" . $_SESSION['reset_token'];
+?>
+
 <html>
 <head>
     <meta charset="UTF-8">
@@ -5,6 +17,6 @@
     <title>View Classes</title>
 </head>
 <body>
-    <h1>Click <a href="reset_password.php">here</a> to reset your password.</h1>
+    <h1>Click <a href="<?= htmlspecialchars($reset_link) ?>">here</a> to reset your password.</h1>
 </body>
 </html>

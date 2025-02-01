@@ -4,27 +4,35 @@ require_once "security.php";
 
 $csrf_token = generateCsrfToken();
 
-if (isset($_SESSION['reset_user_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     validateCsrfToken($_POST['csrf_token']);
-    $student_id = sanitizeInput($_SESSION['reset_user_id']);
     $new_password= sanitizeInput($_POST['new_password']);
     $confirm_password = sanitizeInput($_POST['confirm_password']);
 
-    if (empty($new_password) || empty($confirm_password)) {
-        $message = "Password fields cannot be empty!";
+    if (!isset($_SESSION['reset_token']) || !isset($_SESSION['reset_user_id']) || time() > $_SESSION['reset_expiry']) {
+        die("Invalid or expired token!");
     }
 
-    if ($new_password === $confirm_password){
+    if (empty($new_password) || empty($confirm_password)) {
+        $message = "Password fields cannot be empty!";
+        $message .= "USER ID: $user_id";
+    } elseif ($new_password !== $confirm_password) {
+        $message = "Passwords do not match!";
+    } else {
         $hashed_password = password_hash($confirm_password, PASSWORD_DEFAULT);
         $stmt = $conn->prepare("UPDATE users SET hashed_password = ? WHERE user_id = ?");
         $stmt->bind_param('si', $hashed_password, $user_id);
         $stmt->execute();
-        unset($_SESSION['reset_user_id']);
+        session_unset();
+        session_destroy();
         header("Location: login.php");
         exit();
     }
-} else {
-    $message = "Invalid request!";
+}
+
+// If accessed via link, check for valid session token
+if (!isset($_SESSION['reset_token']) || !isset($_GET['token']) || $_SESSION['reset_token'] !== $_GET['token']) {
+    die("Invalid or expired token!");
 }
 
 ?>
@@ -56,7 +64,7 @@ if (isset($_SESSION['reset_user_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
             <div class="col-md-6 col-lg-5">
                 <div class="card login-card">
                     <div class="card-body p-5">
-                        <h2 class="text-center mb-4 text-primary">Reset</h2>
+                        <h2 class="text-center mb-4 text-primary">Reset Password</h2>
                         <?php if (!empty($message)): ?>
                             <div class="alert alert-danger"><?php echo htmlspecialchars($message); ?></div>
                         <?php endif; ?>
@@ -65,12 +73,12 @@ if (isset($_SESSION['reset_user_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                             <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
                             <div class="mb-3">
                                 <label for="new_password" class="form-label">New Password</label>
-                                <input type="password" class="form-control rounded-pill" id="new_password" name="new_password" required>
+                                <input type="password" class="form-control rounded-pill" id="new_password" name="new_password">
                             </div>
 
                             <div class="mb-4">
                                 <label for="confirm_password" class="form-label">Confirm Password</label>
-                                <input type="password" class="form-control rounded-pill" id="confirm_password" name="confirm_password" required>
+                                <input type="password" class="form-control rounded-pill" id="confirm_password" name="confirm_password">
                             </div>
 
                             <div class="d-grid mb-3">

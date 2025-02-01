@@ -20,9 +20,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             $stmt->bind_result($user_id);
             $stmt->fetch();
+            $reset_token = bin2hex(random_bytes(32));
+            $_SESSION['reset_token'] = $reset_token;
             $_SESSION['reset_user_id'] = $user_id;
+            $_SESSION['reset_expiry'] = time() + 900; // 15 minutes expiry
             header("Location: password_link.php");
-            $stmt->close();
+            exit();
         }
     }
 }
