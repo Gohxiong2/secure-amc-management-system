@@ -5,7 +5,12 @@ require_once 'security.php';
 // Security & Authentication
 verifyAuthentication();
 enforceSessionTimeout(600);
-verifyAdminOrFacultyAccess();
+
+// Initialize variables
+$user_id = $_SESSION['user_id'];
+$isAdmin = isAdmin();
+$isFaculty = isFaculty();
+$isStudent = $isAdmin === $isFaculty;
 
 // Fetch student course assignments
 $query = "SELECT s.student_id, s.name AS student_name, s.student_number, 
@@ -14,18 +19,17 @@ $query = "SELECT s.student_id, s.name AS student_name, s.student_number,
           INNER JOIN students s ON sc.student_id = s.student_id
           INNER JOIN courses c ON sc.course_id = c.course_id";
 
-// Restrict to faculty's assigned courses
-if ($_SESSION['role'] === 'faculty') {
+if ($isFaculty) { // Restrict to faculty's assigned courses
     $query .= " WHERE c.course_id IN (SELECT course_id FROM faculty WHERE user_id = ?)";
+} elseif ($isStudent) { // Student can only view their own coures and status
+    $query .= " WHERE s.user_id = ?";
 }
 
 $query .= " ORDER BY s.name ASC, c.course_name ASC";
-
 $stmt = $conn->prepare($query);
 
-// Bind faculty ID if the user is faculty
-if ($_SESSION['role'] === 'faculty') {
-    $stmt->bind_param('i', $_SESSION['user_id']);
+if ($isFaculty || $isStudent) {
+    $stmt->bind_param('i', $user_id);
 }
 
 $stmt->execute();
@@ -68,7 +72,9 @@ $stmt->close();
                 <a href="dashboard.php" class="btn btn-outline-primary">
                     <i class="bi bi-arrow-left"></i> Back to Dashboard
                 </a>
-                <a href="assign_student_courses.php" class="btn btn-primary">Assign Course</a>
+                <?php if($isAdmin || $isFaculty): ?>
+                    <a href="assign_student_courses.php" class="btn btn-primary">Assign Course</a>
+                <?php endif; ?>
             </div>
 
             <?php displayMessages(); ?>
@@ -81,7 +87,9 @@ $stmt->close();
                             <th scope="col">Student ID</th>
                             <th scope="col">Course</th>
                             <th scope="col">Status</th>
-                            <th scope="col" class="text-center">Actions</th>
+                            <?php if($isAdmin || $isFaculty): ?>
+                                <th scope="col" class="text-center">Actions</th>
+                            <?php endif; ?>
                         </tr>
                     </thead>
                     <tbody>
@@ -102,21 +110,23 @@ $stmt->close();
                                             <?= htmlspecialchars($row['status'], ENT_QUOTES, 'UTF-8') ?>
                                         </span>
                                     </td>
-                                    <td class="text-center">
-                                        <a href="update_student_courses.php?student_id=<?= $row['student_id'] ?>&course_id=<?= $row['course_id'] ?>" 
-                                           class="btn btn-sm btn-outline-primary action-btn me-2">
-                                           Manage
-                                        </a>
-                                        <form method="POST" action="delete_student_courses.php" class="d-inline">
-                                            <input type="hidden" name="csrf_token" value="<?= generateCsrfToken() ?>">
-                                            <input type="hidden" name="student_id" value="<?= $row['student_id'] ?>">
-                                            <input type="hidden" name="course_id" value="<?= $row['course_id'] ?>">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger action-btn" 
-                                                onclick="return confirm('Are you sure you want to delete this assignment?')">
-                                                Delete
-                                            </button>
-                                        </form>
-                                    </td>
+                                    <?php if($isAdmin || $isFaculty): ?>
+                                        <td class="text-center">
+                                            <a href="update_student_courses.php?student_id=<?= $row['student_id'] ?>&course_id=<?= $row['course_id'] ?>" 
+                                            class="btn btn-sm btn-outline-primary action-btn me-2">
+                                            Manage
+                                            </a>
+                                            <form method="POST" action="delete_student_courses.php" class="d-inline">
+                                                <input type="hidden" name="csrf_token" value="<?= generateCsrfToken() ?>">
+                                                <input type="hidden" name="student_id" value="<?= $row['student_id'] ?>">
+                                                <input type="hidden" name="course_id" value="<?= $row['course_id'] ?>">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger action-btn" 
+                                                    onclick="return confirm('Are you sure you want to delete this assignment?')">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    <?php endif; ?>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
