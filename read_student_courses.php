@@ -4,7 +4,7 @@ require_once 'security.php';
 
 // Security & Authentication
 verifyAuthentication();
-enforceSessionTimeout(300);
+enforceSessionTimeout(600);
 verifyAdminOrFacultyAccess();
 
 // Fetch student course assignments
