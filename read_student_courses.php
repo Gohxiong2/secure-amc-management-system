@@ -2,44 +2,35 @@
 require_once 'db_connect.php';
 require_once 'security.php';
 
-//Security & Authentication Checks
+// Security & Authentication
 verifyAuthentication();
-enforceSessionTimeout(300);
+enforceSessionTimeout(600);
 verifyAdminOrFacultyAccess();
 
-try {
-    // Base query for fetching student course assignments
-    $query = "SELECT s.student_id, s.name AS student_name, s.student_number,
-                     c.course_id, c.course_name, sc.status
-              FROM student_courses sc
-              INNER JOIN students s ON sc.student_id = s.student_id
-              INNER JOIN courses c ON sc.course_id = c.course_id";
+// Fetch student course assignments
+$query = "SELECT s.student_id, s.name AS student_name, s.student_number, 
+                 c.course_id, c.course_name, sc.status
+          FROM student_courses sc
+          INNER JOIN students s ON sc.student_id = s.student_id
+          INNER JOIN courses c ON sc.course_id = c.course_id";
 
-    // If the user is faculty, restrict to their assigned courses
-    if ($_SESSION['role'] === 'faculty') {
-        $query .= " WHERE c.course_id IN (
-                      SELECT course_id FROM faculty WHERE user_id = ?
-                  )";
-    }
-
-    $query .= " ORDER BY s.name ASC, c.course_name ASC";
-
-    $stmt = $conn->prepare($query);
-
-    // Bind faculty ID if the user is faculty
-    if ($_SESSION['role'] === 'faculty') {
-        $stmt->bind_param('i', $_SESSION['user_id']);
-    }
-
-    $stmt->execute();
-    $results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-} catch (Exception $e) {
-    error_log("Database Error [read_student_courses]: " . $e->getMessage());
-    $_SESSION['error'] = "Failed to load course assignments. Please try again or contact support.";
-    header("Location: dashboard.php");
-    exit();
+// Restrict to faculty's assigned courses
+if ($_SESSION['role'] === 'faculty') {
+    $query .= " WHERE c.course_id IN (SELECT course_id FROM faculty WHERE user_id = ?)";
 }
+
+$query .= " ORDER BY s.name ASC, c.course_name ASC";
+
+$stmt = $conn->prepare($query);
+
+// Bind faculty ID if the user is faculty
+if ($_SESSION['role'] === 'faculty') {
+    $stmt->bind_param('i', $_SESSION['user_id']);
+}
+
+$stmt->execute();
+$results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
 ?>
 
 <!DOCTYPE html>
@@ -62,12 +53,11 @@ try {
         }
         .action-btn { min-width: 110px; transition: all 0.2s; }
         .action-btn:hover { transform: translateY(-1px); }
-        .empty-state { background: #f8f9fa; border-radius: 0.5rem; }
+        .empty-state { background: #f8f9fa; border-radius: 0.5rem; padding: 2rem; text-align: center; }
     </style>
 </head>
 <body class="bg-light">
     <div class="container">
-        <!-- Centered Title -->
         <div class="row justify-content-center mb-4">
             <div class="col-auto">
                 <h2 class="text-primary text-center display-7 fw-bold">Student Courses</h2>
@@ -78,16 +68,14 @@ try {
                 <a href="dashboard.php" class="btn btn-outline-primary">
                     <i class="bi bi-arrow-left"></i> Back to Dashboard
                 </a>
-                <a href="assign_student_courses.php" class="btn btn-primary">
-                    Assign Course
-                </a>
+                <a href="assign_student_courses.php" class="btn btn-primary">Assign Course</a>
             </div>
 
             <?php displayMessages(); ?>
 
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
-                    <thead class="align-middle">
+                    <thead>
                         <tr>
                             <th scope="col">Student Name</th>
                             <th scope="col">Student ID</th>
@@ -97,53 +85,56 @@ try {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($results as $row): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($row['student_name'], ENT_QUOTES, 'UTF-8') ?></td>
-                            <td><?= htmlspecialchars($row['student_number'], ENT_QUOTES, 'UTF-8') ?></td>
-                            <td><?= htmlspecialchars($row['course_name'], ENT_QUOTES, 'UTF-8') ?></td>
-                            <td>
-                                <span class="badge status-badge 
-                                    <?= match(strtolower($row['status'])) {
-                                        'start' => 'bg-primary',
-                                        'in-progress' => 'bg-warning text-dark',
-                                        'ended' => 'bg-secondary',
-                                        default => 'bg-info'
-                                    } ?>">
-                                    <?= htmlspecialchars($row['status'], ENT_QUOTES, 'UTF-8') ?>
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                <a href="update_student_courses.php?student_id=<?= $row['student_id'] ?>&course_id=<?= $row['course_id'] ?>" 
-                                   class="btn btn-sm btn-outline-primary action-btn me-2">
-                                   Manage
-                                </a>
-                                <form method="POST" action="delete_student_courses.php" class="d-inline">
-                                    <input type="hidden" name="csrf_token" value="<?= generateCsrfToken() ?>">
-                                    <input type="hidden" name="student_id" value="<?= $row['student_id'] ?>">
-                                    <input type="hidden" name="course_id" value="<?= $row['course_id'] ?>">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger action-btn" 
-                                        onclick="return confirm('Are you sure you want to delete this assignment?')">
-                                        Delete
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
+                        <?php if (!empty($results)): ?>
+                            <?php foreach ($results as $row): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($row['student_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td><?= htmlspecialchars($row['student_number'], ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td><?= htmlspecialchars($row['course_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td>
+                                        <span class="badge status-badge 
+                                            <?= match(strtolower($row['status'])) {
+                                                'start' => 'bg-primary',
+                                                'in-progress' => 'bg-warning text-dark',
+                                                'ended' => 'bg-secondary',
+                                                default => 'bg-info'
+                                            } ?>">
+                                            <?= htmlspecialchars($row['status'], ENT_QUOTES, 'UTF-8') ?>
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="update_student_courses.php?student_id=<?= $row['student_id'] ?>&course_id=<?= $row['course_id'] ?>" 
+                                           class="btn btn-sm btn-outline-primary action-btn me-2">
+                                           Manage
+                                        </a>
+                                        <form method="POST" action="delete_student_courses.php" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="<?= generateCsrfToken() ?>">
+                                            <input type="hidden" name="student_id" value="<?= $row['student_id'] ?>">
+                                            <input type="hidden" name="course_id" value="<?= $row['course_id'] ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger action-btn" 
+                                                onclick="return confirm('Are you sure you want to delete this assignment?')">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="5">
+                                    <div class="empty-state">
+                                        <h3 class="h5 text-muted">No active course assignments found</h3>
+                                        <p class="text-muted mb-0">Start by assigning students to courses</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
-
-                <?php if (empty($results)): ?>
-                <div class="empty-state p-5 text-center mt-4">
-                    <h3 class="h5 text-muted">No active course assignments found</h3>
-                    <p class="text-muted mb-0">Start by assigning students to courses</p>
-                </div>
-                <?php endif; ?>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </body>

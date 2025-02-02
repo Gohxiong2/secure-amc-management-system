@@ -43,7 +43,7 @@ if (!in_array($role, $allowed_roles)) {
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="#">Dashboard</a>
+            <a class="navbar-brand" href="#">XYZ Polytechnic</a>
             <div class="d-flex align-items-center">
                 <span class="text-white me-3">Welcome, <?php echo $username; ?>! <span class="text-primary badge bg-light rounded-pill fs-7"><?php echo ucfirst($role); ?></span></span>
                 <a href="logout.php" class="btn btn-outline-light">Logout</a>

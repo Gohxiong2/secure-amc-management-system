@@ -4,7 +4,7 @@ require_once 'security.php';
 
 //Security & Authentication Checks
 verifyAuthentication();
-enforceSessionTimeout(300);
+enforceSessionTimeout(600);
 
 // Verify user role (admin and faculty only)
 verifyAdminOrFacultyAccess();

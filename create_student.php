@@ -4,6 +4,7 @@ require_once 'security.php';
 
 verifyAuthentication();
 verifyAdminOrFacultyAccess();
+enforceSessionTimeout(300);
 
 $user_id = $_SESSION['user_id'];
 // Initialize variables
