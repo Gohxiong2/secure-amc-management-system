@@ -1,6 +1,8 @@
 <?php
 require_once 'db_connect.php';
 require_once 'security.php';
+
+verifyAuthentication();
 verifyAdminOrFacultyAccess();
 
 $user_id = $_SESSION['user_id'];

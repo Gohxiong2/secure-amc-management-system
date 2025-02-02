@@ -4,6 +4,8 @@ require_once 'security.php';
 
 // Security Checks
 verifyAuthentication();
+
+// Verify user role (admin and faculty only)
 verifyAdminOrFacultyAccess();
 
 // Ensure request is POST and CSRF is valid

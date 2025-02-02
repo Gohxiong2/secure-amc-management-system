@@ -5,10 +5,6 @@ require_once 'security.php';
 //Security & Authentication Checks
 verifyAuthentication();
 enforceSessionTimeout(300);
-
-//Database Connection Checks
-validateDatabaseConnection($conn);
-
 verifyAdminOrFacultyAccess();
 
 try {
