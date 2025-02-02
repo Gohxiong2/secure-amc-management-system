@@ -4,7 +4,6 @@ require_once 'security.php';
 
 //Database Connection Checks
 verifyAuthentication();
-validateDatabaseConnection($conn);
 
 // Verify user role (admin and faculty only)
 verifyAdminOrFacultyAccess();

@@ -2,6 +2,7 @@
 require_once 'db_connect.php';
 require_once 'security.php';
 
+verifyAuthentication();
 verifyAdminOrFacultyAccess();
 
 $student_id = $_GET['id'] ?? 0;

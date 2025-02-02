@@ -6,9 +6,6 @@ require_once 'security.php';
 verifyAuthentication();
 enforceSessionTimeout(300);
 
-//Database Connection Checks
-validateDatabaseConnection($conn);
-
 // Verify user role (admin and faculty only)
 verifyAdminOrFacultyAccess();
 
