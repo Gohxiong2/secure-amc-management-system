@@ -4,13 +4,17 @@ require_once 'security.php';
 
 //Security & Authentication Checks
 verifyAuthentication();
-enforceSessionTimeout(600);
+enforceSessionTimeout(300);
 
 // Verify user role (admin and faculty only)
 verifyAdminOrFacultyAccess();
 
 $student_id = $_GET['student_id'] ?? null;
 $course_id = $_GET['course_id'] ?? null;
+
+if (filter_var($student_id, FILTER_VALIDATE_INT) == false || filter_var($course_id, FILTER_VALIDATE_INT) == false) {
+    die("Invalid student ID.");
+} 
 $current_assignment = [];
 $available_courses = [];
 $has_active_courses = false;
@@ -47,16 +51,16 @@ $valid_statuses = explode("','", $enum_values);
 $has_active_courses = in_array($current_status, $valid_statuses);
 
 // Get available courses for reassignment (only if no active courses)
-$course_query = "SELECT c.course_id, c.course_name 
-                 FROM courses c
-                 JOIN faculty f ON c.course_id = f.course_id
-                 WHERE f.user_id = ?
-                 AND c.course_id NOT IN (
-                     SELECT course_id FROM student_courses 
-                     WHERE student_id = ?
-                 )";
+$course_query = "SELECT courses.* 
+FROM courses 
+LEFT JOIN student_courses 
+ON courses.course_id = student_courses.course_id 
+AND student_courses.student_id = ?
+WHERE student_courses.student_id IS NULL;
+
+";
 $stmt = $conn->prepare($course_query);
-$stmt->bind_param('ii', $_SESSION['user_id'], $student_id);
+$stmt->bind_param('i', $student_id);
 $stmt->execute();
 $available_courses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -103,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Add new assignment
             $insert_stmt = $conn->prepare("INSERT INTO student_courses 
                                          (student_id, course_id, status) 
-                                         VALUES (?, ?, 'start')");
+                                         VALUES (?, ?, '')");
             $insert_stmt->bind_param('ii', $student_id, $new_course_id);
             $insert_stmt->execute();
             

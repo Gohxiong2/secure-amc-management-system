@@ -1,7 +1,9 @@
 <?php
+// Get modular functions
 require_once 'db_connect.php';
 require_once 'security.php';
 
+//Only verified users. Auto timeout session after 5 minutes of inactivity.
 verifyAuthentication();
 enforceSessionTimeout(300);
 
@@ -11,8 +13,8 @@ $isFaculty = isFaculty();
 $user_id = $_SESSION['user_id'];
 
 
-if ($isAdmin) {
-    // Get all students with their departments and courses
+// Fetch student records
+if ($isAdmin) { // Admin can view all student records
     $students = $conn->query("
         SELECT students.*, 
         department.name AS department_name,
@@ -25,8 +27,7 @@ if ($isAdmin) {
     ");
 } 
 
-if ($isFaculty) {
-    // Get student records related to faculty courses
+if ($isFaculty) { // Faculty can view all student records, related to faculty's courses
     $stmt = $conn->prepare("
         SELECT students.*, 
         department.name AS department_name,
@@ -39,8 +40,7 @@ if ($isFaculty) {
         WHERE faculty.user_id = ?
         GROUP BY students.student_id
     ");
-} else {
-    // Get single student with courses
+} else { // Student only can see their own records
     $stmt = $conn->prepare("
         SELECT students.*, 
         department.name AS department_name,
@@ -54,7 +54,9 @@ if ($isFaculty) {
     ");
 }
 
-if (!($isAdmin)) {
+if (!($isAdmin)) { // Admin queried already. Non admin uses prepared statement
+
+    //user id is stored on the server, sql injection or XSS attack are not possible. In the sense that, client can't directly modify it
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $students = $stmt->get_result();
@@ -118,7 +120,7 @@ $csrf_token = generateCsrfToken();
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (!(empty($students))): ?>
+                        <?php if ($students->num_rows > 0): ?>
                         <?php while($student = $students->fetch_assoc()): ?>
                         <tr>
                             <td><?= htmlspecialchars($student['student_number']) ?></td>
@@ -162,7 +164,7 @@ $csrf_token = generateCsrfToken();
                         </tr>
                     </tbody>
                 </table>
-                <?php if (empty($students)): ?>
+                <?php if ($students->num_rows === 0): ?>
                     <div class="empty-state p-5 text-center mt-4">
                         <h3 class="h5 text-muted">No student records available</h3>
                     </div>

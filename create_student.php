@@ -1,12 +1,13 @@
 <?php
+// Get modular functions
 require_once 'db_connect.php';
 require_once 'security.php';
 
+// Only verified users. Page can only be access by admin or faculty. Auto timeout session after 5 minutes of inactivity.
 verifyAuthentication();
 verifyAdminOrFacultyAccess();
 enforceSessionTimeout(300);
 
-$user_id = $_SESSION['user_id'];
 // Initialize variables
 $errors = [];
 $classes = [];
@@ -14,14 +15,16 @@ $courses = [];
 $allowedCourseIds = [];
 $isAdmin = isAdmin();
 $isFaculty = isFaculty();
+$user_id = $_SESSION['user_id'];
 
-// Get departments, classes, and courses
+// Get departments, and classes
 $departments = $conn->query("SELECT * FROM department");
 $classes = $conn->query("SELECT * FROM classes");
 
-if ($isAdmin) {
+// Get courses
+if ($isAdmin) { // Admin can see all courses
     $courses = $conn->query("SELECT * FROM courses");
-} elseif ($isFaculty) {
+} elseif ($isFaculty) { // Faculty can see all courses related to their courses
     $stmt = $conn->prepare("SELECT faculty.course_id, courses.* FROM faculty JOIN courses ON courses.course_id = faculty.course_id WHERE faculty.user_id = ?");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
@@ -29,27 +32,29 @@ if ($isAdmin) {
     $stmt->close();
 }
 
+// All course id in courses are allowed, save it in an array to be used later for validation
 foreach ($courses as $course) {
     $allowedCourseIds[] = $course["course_id"];
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Prevent CSRF attack
     validateCsrfToken($_POST['csrf_token']);
 
-    // Sanitize inputs
+    // Sanitize inputs. it trims and htmlspecialchars preventing XSS attack
     $name = sanitizeInput($_POST['name']);
     $email = sanitizeInput($_POST['email']);
     $phone = sanitizeInput($_POST['phone']);
     $student_number = sanitizeInput($_POST['student_number']);
 
-    // Integers can't be XSS attacks
+    // Integers can't be XSS attacks. Preventing XSS
     $class_id = filter_input(INPUT_POST, 'class_id', FILTER_VALIDATE_INT);
     $department_id = filter_input(INPUT_POST, 'department_id', FILTER_VALIDATE_INT);
 
     $selectedCourses = $_POST['courses'] ?? [];
-    $password = bin2hex(random_bytes(8)); // Generate random password
+    $password = bin2hex(random_bytes(8)); // Generate random password for student user creation
 
-    // Validation
+    // Validate the inputs, and compile the errors to display any errors later
     if (empty($name)) $errors[] = "Name is required";
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Invalid email format";
     if (!preg_match('/^[0-9]{8,15}$/', $phone)) $errors[] = "Phone must be 8-15 digits";
@@ -57,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($department_id <= 0) $errors[] = "Invalid department";
 
     if (empty($errors)) {
-        // Begin transaction
+        // Begin transaction allows rollback , if an sql execution fails
         $conn->begin_transaction();
         try {
             // 1. Create user account
@@ -142,7 +147,6 @@ $csrf_token = generateCsrfToken();
     <div class="container">
         <div class="card p-4">
             <h2 class="mb-4 text-primary">Create New Student</h2>
-            
             <?php displayMessages(); ?>
 
             <form method="POST">

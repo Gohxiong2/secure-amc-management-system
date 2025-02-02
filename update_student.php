@@ -1,20 +1,24 @@
 <?php
+// Get modular functions
 require_once 'db_connect.php';
 require_once 'security.php';
 
+// Only verified users. Page can only be access by admin or faculty. Auto timeout session after 5 minutes of inactivity.
 verifyAuthentication();
 verifyAdminOrFacultyAccess();
 enforceSessionTimeout(300);
 
-$student_id = $_GET['id'] ?? 0;
-if (filter_var($student_id, FILTER_VALIDATE_INT) === false) {
+// Initialize variables
+$student_id = $_GET['id'] ?? null;
+if (filter_var($student_id, FILTER_VALIDATE_INT) === false) { // If it's not an integer, deny it. This prevents invalid values and input attacks
     die("Invalid student ID.");
 }
+
 $user_id = $_SESSION['user_id'] ?? 0;
-
 $isFaculty = isFaculty();
+$student = [];
 
-if ($isFaculty) {
+if ($isFaculty) { // Faculty can only access to update students that are in courses that faculty teach
     $stmt = $conn->prepare("SELECT faculty.user_id FROM student_courses JOIN faculty ON faculty.course_id = student_courses.course_id WHERE student_courses.student_id = ?");
     $stmt->bind_param("i", $student_id);
     $stmt->execute();
@@ -27,8 +31,6 @@ if ($isFaculty) {
     }
 }
 
-$student = [];
-
 // Fetch student data
 $stmt = $conn->prepare("SELECT * FROM students WHERE student_id = ?");
 $stmt->bind_param("i", $student_id);
@@ -38,7 +40,7 @@ $student = $stmt->get_result()->fetch_assoc();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     validateCsrfToken($_POST['csrf_token']);
 
-    // Sanitize inputs
+    // Sanitize inputs. it trims and htmlspecialchars preventing XSS attack
     $name = sanitizeInput($_POST['name']);
     $email = sanitizeInput($_POST['email']);
     $phone = sanitizeInput($_POST['phone']);
@@ -46,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $class_id = sanitizeInput($_POST['class_id']);
     $department_id = sanitizeInput($_POST['department_id']);
 
-    // Validation
+    // Validate the inputs, and compile the errors to display any errors later
     $errors = [];
     if (empty($name)) $errors[] = "Name is required";
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Invalid email format";
@@ -86,6 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Fetch classes and departments to be displayed later
 $classes = $conn->query("SELECT * FROM classes");
 $departments = $conn->query("SELECT * FROM department");
 
