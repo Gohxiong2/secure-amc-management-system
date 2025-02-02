@@ -6,7 +6,7 @@ verifyAuthentication();
 verifyAdminOrFacultyAccess();
 enforceSessionTimeout(300);
 
-$student_id = $_GET['id'] ?? 0;
+$student_id = $_GET['id'] ?? null;
 if (filter_var($student_id, FILTER_VALIDATE_INT) === false) {
     die("Invalid student ID.");
 }
