@@ -157,11 +157,6 @@ $csrf_token = generateCsrfToken();
                         </tr>
                         <?php endwhile; ?>
                         <?php endif; ?>
-                        <tr>
-                            <a href="forgot_password.php" class="btn btn-outline-primary">
-                            Update Password
-                            </a>
-                        </tr>
                     </tbody>
                 </table>
                 <?php if ($students->num_rows === 0): ?>

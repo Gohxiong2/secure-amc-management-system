@@ -115,6 +115,16 @@ if (!in_array($role, $allowed_roles)) {
                         </div>
                     </div>
                 </div>
+                <div class="col-md-4">
+                    <div class="card dashboard-card shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title text-primary">Update Password</h5>
+                            <a href="forgot_password.php" class="btn btn-primary rounded-pill mt-3">
+                            Update Password
+                            </a>
+                        </div>
+                    </div>
+                </div>
             <?php endif; ?>
         </div>
     </div>
