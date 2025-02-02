@@ -1,6 +1,8 @@
 <?php
+session_start();
 require_once "db_connect.php";
 require_once "security.php";
+
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = sanitizeInput($_POST['email']);

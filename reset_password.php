@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once "db_connect.php";
 require_once "security.php";
 
@@ -6,6 +7,7 @@ $csrf_token = generateCsrfToken();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     validateCsrfToken($_POST['csrf_token']);
+    $user_id = $_SESSION['reset_user_id'];
     $new_password= sanitizeInput($_POST['new_password']);
     $confirm_password = sanitizeInput($_POST['confirm_password']);
 
