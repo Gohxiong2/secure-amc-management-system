@@ -6,17 +6,20 @@ require_once "security.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = sanitizeInput($_POST['email']);
+    
+    // Error handling
     if (empty($email)){
         $message = "Email cannot be empty!";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)){
         $message = "Invalid email format!";
     } else {
+        // Prepare and binds parameters
         $stmt = $conn -> prepare("SELECT user_id FROM students WHERE email = ?");
-
         $stmt->bind_param('s', $email);
         $stmt->execute();
-
         $stmt->store_result();
+
+        // If email is not found in table, send this message
         if ($stmt->num_rows == 0) {
             $message = "Email not found in the database!";
         } else {
@@ -25,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $reset_token = bin2hex(random_bytes(32));
             $_SESSION['reset_token'] = $reset_token;
             $_SESSION['reset_user_id'] = $user_id;
-            $_SESSION['reset_expiry'] = time() + 900; // 15 minutes expiry
+            $_SESSION['reset_expiry'] = time() + 300; // 5 minutes expiry
             header("Location: password_link.php");
             exit();
         }

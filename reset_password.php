@@ -7,6 +7,8 @@ $csrf_token = generateCsrfToken();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     validateCsrfToken($_POST['csrf_token']);
+
+    // Put the tokens into variables
     $user_id = $_SESSION['reset_user_id'];
     $new_password= sanitizeInput($_POST['new_password']);
     $confirm_password = sanitizeInput($_POST['confirm_password']);
@@ -15,16 +17,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         die("Invalid or expired token!");
     }
 
+    // Error handling
     if (empty($new_password) || empty($confirm_password)) {
         $message = "Password fields cannot be empty!";
-        $message .= "USER ID: $user_id";
     } elseif ($new_password !== $confirm_password) {
         $message = "Passwords do not match!";
     } else {
+        // Hashes the password
         $hashed_password = password_hash($confirm_password, PASSWORD_DEFAULT);
+
+        // Prepares and binds the parameters
         $stmt = $conn->prepare("UPDATE users SET hashed_password = ? WHERE user_id = ?");
         $stmt->bind_param('si', $hashed_password, $user_id);
         $stmt->execute();
+
+        // End the session
         session_unset();
         session_destroy();
         header("Location: login.php");
@@ -67,6 +74,8 @@ if (!isset($_SESSION['reset_token']) || !isset($_GET['token']) || $_SESSION['res
                 <div class="card login-card">
                     <div class="card-body p-5">
                         <h2 class="text-center mb-4 text-primary">Reset Password</h2>
+
+                        <!--Error messages appear here-->
                         <?php if (!empty($message)): ?>
                             <div class="alert alert-danger"><?php echo htmlspecialchars($message); ?></div>
                         <?php endif; ?>
