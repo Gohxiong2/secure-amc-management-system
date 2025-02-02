@@ -12,6 +12,7 @@ $isAdmin = isAdmin();
 $isFaculty = isFaculty();
 $user_id = $_SESSION['user_id'];
 
+
 // Fetch student records
 if ($isAdmin) { // Admin can view all student records
     $students = $conn->query("
@@ -62,6 +63,7 @@ if (!($isAdmin)) { // Admin queried already. Non admin uses prepared statement
 }
 
 $csrf_token = generateCsrfToken();
+
 ?>
 
 <!DOCTYPE html>
@@ -155,6 +157,11 @@ $csrf_token = generateCsrfToken();
                         </tr>
                         <?php endwhile; ?>
                         <?php endif; ?>
+                        <tr>
+                            <a href="forgot_password.php" class="btn btn-outline-primary">
+                            Update Password
+                            </a>
+                        </tr>
                     </tbody>
                 </table>
                 <?php if ($students->num_rows === 0): ?>

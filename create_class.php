@@ -6,7 +6,7 @@ verifyAuthentication();
 verifyAdminOrFacultyAccess();
 enforceSessionTimeout();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {   // check csrf token
     if (!validateCsrfToken($_POST['csrf_token'])) {
         $_SESSION['error'] = "Invalid CSRF token";
         header("Location: create_class.php");
@@ -22,8 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($class_name) || empty($course_id) || empty($semester)) {
         $_SESSION['error'] = "All fields are required";
     } else {
-        $stmt = $conn->prepare("INSERT INTO classes (class_name, course_id, semester, start_date, end_date) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sisss", $class_name, $course_id, $semester, $start_date, $end_date);
+        $stmt = $conn->prepare("INSERT INTO classes (class_name, course_id, semester, start_date, end_date) VALUES (?, ?, ?, ?, ?)"); //prepare inputs
+        $stmt->bind_param("sisss", $class_name, $course_id, $semester, $start_date, $end_date); // bind params
 
         if ($stmt->execute()) {
             $_SESSION['success'] = "Class created successfully";
