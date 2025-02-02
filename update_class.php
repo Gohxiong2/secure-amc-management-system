@@ -2,10 +2,13 @@
 require_once 'db_connect.php';
 require_once 'security.php';
 
+// Verifying level of access & session timeouts
 verifyAuthentication();
 verifyAdminOrFacultyAccess();
-enforceSessionTimeout();
+enforceSessionTimeout(300);
 
+// Checks if id exists and casts it into integer
+// if the id does not exist, $class_id = 0
 $class_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -15,15 +18,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
+    // Sanitization
     $class_name = sanitizeInput($_POST['class_name']);
     $duration = sanitizeInput($_POST['duration']);
     $start_date = sanitizeInput($_POST['start_date']);
     $end_date = sanitizeInput($_POST['end_date']);
     $class_id = (int)$_POST['class_id'];
 
+    // Error handling
     if (empty($class_name) || empty($duration)) {
         $_SESSION['error'] = "All fields are required";
+    } elseif (strtotime($start_date) > strtotime($end_date)){
+        $_SESSION['error'] = "Start date cannot be later than end date!";
+    } elseif ((preg_match('/[^a-zA-Z0-9 ]/', $class_name)) || (preg_match('/[^a-zA-Z0-9 ]/', $duration))) {
+        $_SESSION['error'] = "No special characters allowed!";
     } else {
+        
+        //Preparing and binding parameters
         $stmt = $conn->prepare("UPDATE classes SET class_name=?, duration=?, start_date=?, end_date=? WHERE class_id=?");
         $stmt->bind_param("ssssi", $class_name, $duration, $start_date, $end_date, $class_id);
 
