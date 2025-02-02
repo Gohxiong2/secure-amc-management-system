@@ -18,10 +18,12 @@ if ($isAdmin) { // Admin can view all student records
     $students = $conn->query("
         SELECT students.*, 
         department.name AS department_name,
+        classes.class_name AS class_name,
         GROUP_CONCAT(courses.course_name SEPARATOR ', ') AS enrolled_courses
         FROM students
         JOIN department ON students.department_id = department.department_id
         LEFT JOIN student_courses ON students.student_id = student_courses.student_id
+        LEFT JOIN classes ON students.class_id = classes.class_id
         LEFT JOIN courses ON student_courses.course_id = courses.course_id
         GROUP BY students.student_id
     ");
@@ -31,10 +33,12 @@ if ($isFaculty) { // Faculty can view all student records, related to faculty's 
     $stmt = $conn->prepare("
         SELECT students.*, 
         department.name AS department_name,
+        classes.class_name AS class_name,
         GROUP_CONCAT(courses.course_name SEPARATOR ', ') AS enrolled_courses
         FROM students
         JOIN department ON students.department_id = department.department_id
         LEFT JOIN student_courses ON students.student_id = student_courses.student_id
+        LEFT JOIN classes ON students.class_id = classes.class_id
         LEFT JOIN courses ON student_courses.course_id = courses.course_id
         JOIN faculty ON student_courses.course_id = faculty.course_id
         WHERE faculty.user_id = ?
@@ -44,10 +48,12 @@ if ($isFaculty) { // Faculty can view all student records, related to faculty's 
     $stmt = $conn->prepare("
         SELECT students.*, 
         department.name AS department_name,
+        classes.class_name AS class_name,
         GROUP_CONCAT(courses.course_name SEPARATOR ', ') AS enrolled_courses
         FROM students
         JOIN department ON students.department_id = department.department_id
         LEFT JOIN student_courses ON students.student_id = student_courses.student_id
+        LEFT JOIN classes ON students.class_id = classes.class_id
         LEFT JOIN courses ON student_courses.course_id = courses.course_id
         WHERE students.user_id = ?
         GROUP BY students.student_id
@@ -112,6 +118,7 @@ $csrf_token = generateCsrfToken();
                             <th>Name</th>
                             <th>Email</th>
                             <th>Phone</th>
+                            <th>Class</th>
                             <th>Department</th>
                             <th>Enrolled Courses</th>
                             <?php if ($isAdmin || $isFaculty): ?>
@@ -127,6 +134,7 @@ $csrf_token = generateCsrfToken();
                             <td><?= htmlspecialchars($student['name']) ?></td>
                             <td><?= htmlspecialchars($student['email']) ?></td>
                             <td><?= htmlspecialchars($student['phone']) ?></td>
+                            <td><?= htmlspecialchars($student['class_name']) ?></td>
                             <td>
                                 <span class="badge bg-primary">
                                     <?= htmlspecialchars($student['department_name']) ?>
