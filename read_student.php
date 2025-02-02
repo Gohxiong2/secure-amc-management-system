@@ -10,6 +10,7 @@ $isAdmin = isAdmin();
 $isFaculty = isFaculty();
 $user_id = $_SESSION['user_id'];
 
+
 if ($isAdmin) {
     // Get all students with their departments and courses
     $students = $conn->query("
@@ -60,6 +61,7 @@ if (!($isAdmin)) {
 }
 
 $csrf_token = generateCsrfToken();
+
 ?>
 
 <!DOCTYPE html>
@@ -154,7 +156,9 @@ $csrf_token = generateCsrfToken();
                         <?php endwhile; ?>
                         <?php endif; ?>
                         <tr>
-                            <a href="reset_password.php" class="btn btn-outline-primary">Update Password</a>
+                            <a href="forgot_password.php" class="btn btn-outline-primary">
+                            Update Password
+                            </a>
                         </tr>
                     </tbody>
                 </table>

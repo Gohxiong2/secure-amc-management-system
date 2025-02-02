@@ -6,7 +6,7 @@ if (!isset($_SESSION['reset_token']) || !isset($_SESSION['reset_user_id'])) {
     exit();
 }
 
-// Create the reset link dynamically
+// dynamic reset link
 $reset_link = "reset_password.php?token=" . $_SESSION['reset_token'];
 ?>
 
