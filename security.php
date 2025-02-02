@@ -96,12 +96,3 @@ function enforceSessionTimeout($timeout = 300) {
 }
 
 
-// Function to safely validate the database connection
-function validateDatabaseConnection($conn) {
-    if (!isset($conn) || $conn === null) {
-        $_SESSION['error_message'] = "Database connection error. Please try again later.";
-        return false;
-    }
-    return true;
-}
-
