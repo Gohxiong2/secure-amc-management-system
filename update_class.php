@@ -12,7 +12,7 @@ enforceSessionTimeout(300);
 $class_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!validateCsrfToken($_POST['csrf_token'])) {
+    if (validateCsrfToken($_POST['csrf_token'])) {
         $_SESSION['error'] = "Invalid CSRF token";
         header("Location: update_class.php?id=" . $class_id);
         exit();
