@@ -6,14 +6,11 @@ require_once 'security.php';
 verifyAuthentication();
 enforceSessionTimeout(300);
 
-//Database Connection Checks
-validateDatabaseConnection($conn);
 
 // Check user role
 $isAdmin = isAdmin();
 $isFaculty = isFaculty();
 $user_id = $_SESSION['user_id'];
-
 
 // // Fetch courses based on role
 if ($isAdmin) {
@@ -56,7 +53,6 @@ if ($isAdmin) {
     header("Location: 403.php");
     exit();
 }
-
 
 $csrf_token = generateCsrfToken();
 ?>
@@ -109,7 +105,6 @@ $csrf_token = generateCsrfToken();
                     <?php unset($_SESSION['success_message'], $_SESSION['error_message']); ?>
                 </div>
             <?php endif; ?>
-
 
 
             <!-- Table -->
@@ -165,3 +160,5 @@ $csrf_token = generateCsrfToken();
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+

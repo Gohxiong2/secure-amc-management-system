@@ -7,7 +7,7 @@ verifyAuthentication();
 enforceSessionTimeout(300);
 
 //Database Connection Checks
-validateDatabaseConnection($conn);
+
 
 // Verify user role (admin and faculty only)
 verifyAdminOrFacultyAccess();
@@ -27,7 +27,6 @@ function fetchCourseDetails($conn, $course_id) {
         return null; // Return null on error
     }
 }
-
 
 // Handle GET requests to fetch course details
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -67,7 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         die("No course is currently selected for editing.");
     }
 }
-
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validate CSRF token
@@ -121,7 +119,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_message = "The difference between the start date and the end date must be at least one year.";
     } else {
 
-
         // Ensure the course name is unique
         $name_query = "SELECT 1 FROM courses WHERE course_name = ? AND course_id != ?";
         $name_stmt = $conn->prepare($name_query);
@@ -157,7 +154,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $update_stmt = $conn->prepare($update_query);
                     $update_stmt->bind_param('ssssi', $course_name, $course_code, $start_date, $end_date, $course_id);
 
-
                     if ($update_stmt->execute()) {
 
                         $success_message = "The course has been updated successfully.";
@@ -178,7 +174,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-
 
     
     // Update session with the latest course data
@@ -267,5 +262,6 @@ $csrf_token = generateCsrfToken();
     </div>
 </body>
 </html>
+
 
 
