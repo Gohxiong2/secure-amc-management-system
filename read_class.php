@@ -4,7 +4,7 @@ require_once 'security.php';
 
 verifyAuthentication();
 verifyAdminOrFacultyAccess();
-enforceSessionTimeout();
+enforceSessionTimeout(300);
 
 // Updated query to remove course_id since it's not in the schema
 $query = "SELECT c.* 
@@ -41,6 +41,7 @@ $csrf_token = generateCsrfToken();
                 <a href="dashboard.php" class="btn btn-outline-primary">
                     <i class="bi bi-arrow-left"></i> Back to Dashboard
                 </a>
+                <!--Can create new class if role is admin or faculty-->
                 <?php if (isAdmin() || isFaculty()): ?>
                     <a href="create_class.php" class="btn btn-primary">Create New Class</a>
                 <?php endif; ?>
@@ -65,9 +66,12 @@ $csrf_token = generateCsrfToken();
                                 <td><?php echo htmlspecialchars($row['start_date']); ?></td>
                                 <td><?php echo htmlspecialchars($row['end_date']); ?></td>
                                 <td>
+                                    <!--Manage button is visible if role is admin or faculty-->
                                     <?php if (isAdmin() || isFaculty()): ?>
                                         <a href="update_class.php?id=<?php echo $row['class_id']; ?>" 
                                            class="btn btn-sm btn-outline-primary me-2">Manage</a>
+                                    
+                                       <!--Delete button not visible to faculty-->
                                         <?php if (isAdmin()): ?>
                                             <form method="POST" action="delete_class.php" class="d-inline">
                                                 <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">

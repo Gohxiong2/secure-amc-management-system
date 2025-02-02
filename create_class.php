@@ -4,26 +4,34 @@ require_once 'security.php';
 
 verifyAuthentication();
 verifyAdminOrFacultyAccess();
-enforceSessionTimeout();
+enforceSessionTimeout(300);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {   // check csrf token
-    if (!validateCsrfToken($_POST['csrf_token'])) {
+// Checking for valid CSRF Tokens
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {   
+    if (validateCsrfToken($_POST['csrf_token'])) {
         $_SESSION['error'] = "Invalid CSRF token";
         header("Location: create_class.php");
         exit();
     }
 
+    // Sanitize inputs
     $class_name = sanitizeInput($_POST['class_name']);
-    $course_id = (int)$_POST['course_id'];
-    $semester = sanitizeInput($_POST['semester']);
+    $duration = sanitizeInput($_POST['duration']);
     $start_date = sanitizeInput($_POST['start_date']);
-    $end_date = sanitizeInput($_POST['end_date']);
+    $end_date = sanitizeInput($_POST['end_date']);         
 
-    if (empty($class_name) || empty($course_id) || empty($semester)) {
+    // Make sure that fields are not empty and do not have special characters
+    if (empty($class_name) || empty($duration)) {
         $_SESSION['error'] = "All fields are required";
-    } else {
-        $stmt = $conn->prepare("INSERT INTO classes (class_name, course_id, semester, start_date, end_date) VALUES (?, ?, ?, ?, ?)"); //prepare inputs
-        $stmt->bind_param("sisss", $class_name, $course_id, $semester, $start_date, $end_date); // bind params
+    } elseif (strtotime($start_date) > strtotime($end_date)){
+        $_SESSION['error'] = "Start date cannot be later than end date!";
+    } elseif ((preg_match('/[^a-zA-Z0-9 ]/', $class_name)) || (preg_match('/[^a-zA-Z0-9 ]/', $duration))) {
+        $_SESSION['error'] = "No special characters allowed!";
+    } 
+    else {
+        // Prepare and bind parameters
+        $stmt = $conn->prepare("INSERT INTO classes (class_name, duration, start_date, end_date) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $class_name, $duration, $start_date, $end_date);
 
         if ($stmt->execute()) {
             $_SESSION['success'] = "Class created successfully";
@@ -36,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {   // check csrf token
     }
 }
 
+// To show course name
 $courses_query = "SELECT course_id, course_name, course_code FROM courses";
 $courses_result = mysqli_query($conn, $courses_query);
 ?>
@@ -77,6 +86,7 @@ $courses_result = mysqli_query($conn, $courses_query);
                     <input type="text" class="form-control" id="class_name" name="class_name" required>
                 </div>
 
+                <!-- To show course names -->
                 <div class="mb-3">
                     <label for="course_id" class="form-label">Course:</label>
                     <select class="form-control" id="course_id" name="course_id" required>
@@ -90,8 +100,8 @@ $courses_result = mysqli_query($conn, $courses_query);
                 </div>
 
                 <div class="mb-3">
-                    <label for="semester" class="form-label">Semester:</label>
-                    <input type="text" class="form-control" id="semester" name="semester" required>
+                    <label for="duration" class="form-label">Semester:</label>
+                    <input type="text" class="form-control" id="duration" name="duration" required>
                 </div>
 
                 <div class="mb-3">
