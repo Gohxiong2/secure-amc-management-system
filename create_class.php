@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['error'] = "All fields are required";
     } elseif (strtotime($start_date) > strtotime($end_date)){
         $_SESSION['error'] = "Start date cannot be later than end date!";
-    } elseif ((preg_match('/^[a-zA-Z0-9.]+$/', $class_name)) || (preg_match('/^[a-zA-Z0-9.]+$/', $duration))) {
+    } elseif ((preg_match('/^[a-zA-Z0-9.-]+$/', $class_name)) || (preg_match('/^[a-zA-Z0-9.-]+$/', $duration))) {
         $_SESSION['error'] = "No special characters allowed!";
     } 
     else {
