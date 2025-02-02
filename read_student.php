@@ -152,6 +152,9 @@ $csrf_token = generateCsrfToken();
                         </tr>
                         <?php endwhile; ?>
                         <?php endif; ?>
+                        <tr>
+                            <a href="reset_password.php" class="btn btn-outline-primary">Update Password</a>
+                        </tr>
                     </tbody>
                 </table>
                 <?php if (empty($students)): ?>
