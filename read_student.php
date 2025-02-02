@@ -118,7 +118,7 @@ $csrf_token = generateCsrfToken();
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (!(empty($students))): ?>
+                        <?php if ($students->num_rows > 0): ?>
                         <?php while($student = $students->fetch_assoc()): ?>
                         <tr>
                             <td><?= htmlspecialchars($student['student_number']) ?></td>
@@ -157,7 +157,7 @@ $csrf_token = generateCsrfToken();
                         <?php endif; ?>
                     </tbody>
                 </table>
-                <?php if (empty($students)): ?>
+                <?php if ($students->num_rows === 0): ?>
                     <div class="empty-state p-5 text-center mt-4">
                         <h3 class="h5 text-muted">No student records available</h3>
                     </div>
