@@ -30,7 +30,8 @@ CRUD 1 (Chen Zehua) : create_student.php, read_student.php, update_student.php, 
 
 CRUD 2 (Glendon) : create_class.php, read_class.php, update_class.php, delete_class.php
 
-CRUD 3 (Muqaddim) : create_course.php, read_course.php, update_course.php, delete_course.php
+CRUD 3 (Muqaddim) : create_course.php, read_course.php, update_course.php, delete_course.php (crud operation 3 main pages)
+                    403.php, course_error.php, course_form_common.php, csrf_error_course.php, error_handler.php, security_course.php (These are pages linked to main pages of crud_operaton_3)
 
 CRUD Integration 1 (Muqaddim & Zehua)
 
