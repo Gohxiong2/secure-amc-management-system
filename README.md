@@ -25,3 +25,9 @@ faculty:password
 
 S3213141:bce6dc006be21ef3 (student)
 
+# Indiviudal CRUD pages contributors
+CRUD 1 (Chen Zehua) : create_student.php, read_student.php, update_student.php, delete_student.php
+
+CRUD 2 (Glendon) : create_class.php, read_class.php, update_class.php, delete_class.php
+
+CRUD 3 (Muqaddim) : create_course.php, read_course.php, update_course.php, delete_course.php

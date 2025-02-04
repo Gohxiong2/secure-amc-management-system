@@ -6,7 +6,7 @@
 function generateCsrfToken() {
     if (empty($_SESSION['csrf_token']) || empty($_SESSION['csrf_token_expiry']) || time() > $_SESSION['csrf_token_expiry']) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); // Generate a secure random token
-        $_SESSION['csrf_token_expiry'] = time() + 3600; // Set token expiry time (e.g., 1 hour)
+        $_SESSION['csrf_token_expiry'] = time() + 300; // Set token expiry time (e.g., 1 hour)
     }
     return $_SESSION['csrf_token'];
 }
