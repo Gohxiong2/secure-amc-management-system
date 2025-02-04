@@ -32,7 +32,7 @@ CRUD 2 (Glendon) : create_class.php, read_class.php, update_class.php, delete_cl
 
 CRUD 3 (Muqaddim) : create_course.php, read_course.php, update_course.php, delete_course.php
 
-CRUD Integration 1 (Muqaddim)
+CRUD Integration 1 (Muqaddim & Zehua)
 
 CRUD Integration 2 (Glendon)
 
